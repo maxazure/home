@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh" class="h-full bg-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航管理后台</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <!-- 顶部导航栏 -->
+        <nav class="bg-gray-800">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="flex h-16 items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <h1 class="text-white font-bold text-xl">导航管理</h1>
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="ml-10 flex items-baseline space-x-4">
+                                <a href="/admin/logout" class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">退出登录</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="flex">
+            <!-- 左侧菜单 -->
+            <div class="w-64 bg-white shadow-lg h-screen">
+                <nav class="mt-5 px-2">
+                    <a href="#" onclick="showCategories()" class="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900">
+                        <svg class="mr-4 h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        分类管理
+                    </a>
+
+                    <a href="#" onclick="showLinks()" class="mt-1 group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900">
+                        <svg class="mr-4 h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                        链接管理
+                    </a>
+
+                    <a href="#" onclick="showUsers()" class="mt-1 group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900">
+                        <svg class="mr-4 h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        用户管理
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 主要内容区域 -->
+            <div class="flex-1">
+                <header class="bg-white shadow">
+                    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                        <h1 class="text-3xl font-bold tracking-tight text-gray-900">导航管理后台</h1>
+                    </div>
+                </header>
+
+                <main class="flex-1">
+                    <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+                        <!-- 分类管理部分 -->
+                        <div id="categories-section" class="hidden">
+                            <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                                <h2 class="text-xl font-semibold text-gray-900">分类管理</h2>
+                                <button onclick="showAddCategoryModal()" class="btn btn-primary">添加分类</button>
+                            </div>
+                            <div class="mt-8 flow-root">
+                                <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                    <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                        <table class="min-w-full divide-y divide-gray-300">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">ID</th>
+                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">标题</th>
+                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">所属区域</th>
+                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200" id="categories-table-body"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 链接管理部分 -->
+                        <div id="links-section" class="hidden">
+                            <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                                <h2 class="text-xl font-semibold text-gray-900">链接管理</h2>
+                                <button onclick="showAddLinkModal()" class="btn btn-primary">添加链接</button>
+                            </div>
+                            <div class="mt-8 space-y-8" id="links-container">
+                                <!-- 链接卡片将通过JavaScript动态加载 -->
+                            </div>
+                        </div>
+
+                        <!-- 用户管理部分 -->
+                        <div id="users-section" class="hidden">
+                            <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                                <h2 class="text-xl font-semibold text-gray-900">用户管理</h2>
+                                <button onclick="showAddUserModal()" class="btn btn-primary">添加用户</button>
+                            </div>
+                            <div class="mt-8 flow-root">
+                                <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                    <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                        <table class="min-w-full divide-y divide-gray-300">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">ID</th>
+                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">用户名</th>
+                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">创建时间</th>
+                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200" id="users-table-body"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分类表单模态框 -->
+    <div id="category-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity hidden" aria-hidden="true">
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                        <h3 id="category-modal-title" class="text-lg font-medium leading-6 text-gray-900 mb-4">添加分类</h3>
+                        <form id="category-form" class="space-y-4">
+                            <div>
+                                <label for="category-title" class="block text-sm font-medium text-gray-700">标题</label>
+                                <input type="text" id="category-title" required class="form-input">
+                            </div>
+                            <div>
+                                <label for="section-name" class="block text-sm font-medium text-gray-700">所属区域</label>
+                                <input type="text" id="section-name" required class="form-input">
+                            </div>
+                            <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                                <button type="submit" class="btn btn-primary">保存</button>
+                                <button type="button" class="btn" onclick="closeModal('category-modal')">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 链接表单模态框 -->
+    <div id="link-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity hidden" aria-hidden="true">
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                        <h3 id="link-modal-title" class="text-lg font-medium leading-6 text-gray-900 mb-4">添加链接</h3>
+                        <form id="link-form" class="space-y-4">
+                            <div>
+                                <label for="link-name" class="block text-sm font-medium text-gray-700">名称</label>
+                                <input type="text" id="link-name" required class="form-input">
+                            </div>
+                            <div>
+                                <label for="link-url" class="block text-sm font-medium text-gray-700">URL</label>
+                                <input type="url" id="link-url" required class="form-input">
+                            </div>
+                            <div>
+                                <label for="link-category" class="block text-sm font-medium text-gray-700">所属分类</label>
+                                <select id="link-category" required class="form-input"></select>
+                            </div>
+                            <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                                <button type="submit" class="btn btn-primary">保存</button>
+                                <button type="button" class="btn" onclick="closeModal('link-modal')">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户表单模态框 -->
+    <div id="user-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity hidden" aria-hidden="true">
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                        <h3 id="user-modal-title" class="text-lg font-medium leading-6 text-gray-900 mb-4">添加用户</h3>
+                        <form id="user-form" class="space-y-4">
+                            <div>
+                                <label for="username" class="block text-sm font-medium text-gray-700">用户名</label>
+                                <input type="text" id="username" required class="form-input">
+                            </div>
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-gray-700">密码</label>
+                                <input type="password" id="password" required class="form-input">
+                            </div>
+                            <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                                <button type="submit" class="btn btn-primary">保存</button>
+                                <button type="button" class="btn" onclick="closeModal('user-modal')">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+</html> 

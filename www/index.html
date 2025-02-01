@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh" class="h-full bg-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航页面</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <header class="bg-white shadow">
+            <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <h1 class="text-3xl font-bold tracking-tight text-gray-900">我的导航</h1>
+            </div>
+        </header>
+        <main>
+            <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+                <div id="app" class="space-y-8">
+                    <!-- 内容将通过 JavaScript 动态加载 -->
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/categories');
+                const categories = await response.json();
+                
+                const sections = {};
+                categories.forEach(category => {
+                    if (!sections[category.section_name]) {
+                        sections[category.section_name] = [];
+                    }
+                    sections[category.section_name].push(category);
+                });
+                
+                const app = document.getElementById('app');
+                for (const [sectionName, categories] of Object.entries(sections)) {
+                    const sectionHtml = `
+                        <div class="section bg-white shadow rounded-lg overflow-hidden">
+                            <div class="px-4 py-5 sm:px-6">
+                                <h2 class="text-xl font-semibold text-gray-900">${sectionName}</h2>
+                            </div>
+                            <div class="border-t border-gray-200">
+                                <div class="px-4 py-5 sm:p-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                    ${await Promise.all(categories.map(async category => {
+                                        const linksResponse = await fetch(`/api/categories/${category.id}/links`);
+                                        const links = await linksResponse.json();
+                                        
+                                        return `
+                                            <div class="category">
+                                                <h3 class="text-lg font-medium text-gray-900 mb-4">${category.title}</h3>
+                                                <div class="grid gap-3">
+                                                    ${links.map(link => `
+                                                        <a href="${link.url}" 
+                                                           target="_blank" 
+                                                           rel="noopener noreferrer"
+                                                           class="flex items-center p-3 text-base font-medium text-gray-900 rounded-lg bg-gray-50 hover:bg-gray-100 group hover:shadow">
+                                                            <span class="flex-1 ml-3 whitespace-nowrap">${link.name}</span>
+                                                            <span class="inline-flex items-center justify-center px-2 py-0.5 ml-3 text-xs font-medium text-gray-500 bg-gray-200 rounded">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                                </svg>
+                                                            </span>
+                                                        </a>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        `;
+                                    })).then(categoriesHtml => categoriesHtml.join(''))}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    app.insertAdjacentHTML('beforeend', sectionHtml);
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('app').innerHTML = `
+                    <div class="rounded-md bg-red-50 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">加载数据时出错</h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <p>请刷新页面重试。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html> 

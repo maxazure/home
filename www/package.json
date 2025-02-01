@@ -1,0 +1,12 @@
+{
+  "name": "navigation-site",
+  "version": "1.0.0",
+  "description": "Navigation website with TailwindCSS",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/style.css -o ./css/style.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1",
+    "@tailwindcss/forms": "^0.5.7"
+  }
+} 
