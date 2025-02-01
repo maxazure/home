@@ -1,0 +1,45 @@
+/* Custom styles */
+body {
+    font-family: 'Noto Sans SC', sans-serif;
+}
+.section-title {
+    color: #007bff;
+}
+.list-unstyled {
+    padding-left: 0;
+    list-style: none;
+}
+a {
+    color: #000;
+    text-decoration: none;
+}
+a:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+.column-title {
+    font-size: 16px; 
+}
+.row {
+    margin-bottom: 16px;
+}
+
+
+.google-search {
+    margin: 20px auto;
+    width: 60%;
+}
+
+
+input.gsc-input {
+    border-color: grey !important; /* 修改这里设置边框颜色 */
+    font-size: 18px !important; /* 修改这里设置字体大小 */
+    height: 40px !important; /* 修改这里设置高度 */
+    padding: 15px;
+}
+
+/* 调整搜索按钮大小 */
+input.gsc-search-button {
+    height: 40px !important; /* 修改这里设置按钮高度 */
+    padding: 10px 20px !important; /* 修改这里设置按钮内边距 */
+}
