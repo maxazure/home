@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./links.db:/app/links.db
+      - ./migrations:/app/migrations
+    environment:
+      - FLASK_APP=app.py
+    command: >
+      sh -c "flask db upgrade &&
+             flask create-admin &&
+             gunicorn --bind 0.0.0.0:5000 app:app" 
