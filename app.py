@@ -27,12 +27,36 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    is_locked = db.Column(db.Boolean, default=False)
+    failed_login_attempts = db.Column(db.Integer, default=0)
+    last_failed_login = db.Column(db.DateTime)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def increment_failed_attempts(self):
+        self.failed_login_attempts += 1
+        self.last_failed_login = db.func.current_timestamp()
+        if self.failed_login_attempts >= 10:
+            self.is_locked = True
+        db.session.commit()
+
+    def reset_failed_attempts(self):
+        self.failed_login_attempts = 0
+        self.last_failed_login = None
+        db.session.commit()
+
+class IPBlock(db.Model):
+    __tablename__ = 'ip_blocks'
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(45), unique=True, nullable=False)  # IPv6 最长 45 字符
+    failed_attempts = db.Column(db.Integer, default=0)
+    is_blocked = db.Column(db.Boolean, default=False)
+    last_attempt = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -195,11 +219,59 @@ def admin_login_page():
 @app.route('/admin/login', methods=['POST'])
 def admin_login():
     data = request.json
+    ip_address = request.remote_addr
+    
+    # 检查 IP 是否被封禁
+    ip_block = IPBlock.query.filter_by(ip_address=ip_address).first()
+    if ip_block and ip_block.is_blocked:
+        return jsonify({
+            'success': False, 
+            'message': '由于多次登录失败，此IP已被封禁，请联系管理员解封'
+        }), 403
+    
     user = User.query.filter_by(username=data.get('username')).first()
+    
+    # 检查用户是否存在且未被锁定
+    if user and user.is_locked:
+        return jsonify({
+            'success': False,
+            'message': '账户已被锁定，请联系管理员解锁'
+        }), 403
+    
+    # 验证用户名和密码
     if user and user.check_password(data.get('password')):
+        # 登录成功，重置失败计数
+        if ip_block:
+            ip_block.failed_attempts = 0
+            ip_block.is_blocked = False
+            db.session.commit()
+        user.reset_failed_attempts()
         login_user(user)
         return jsonify({'success': True})
-    return jsonify({'success': False, 'message': '用户名或密码错误'}), 401
+    
+    # 登录失败，增加失败计数
+    if ip_block:
+        ip_block.failed_attempts += 1
+        ip_block.last_attempt = db.func.current_timestamp()
+        if ip_block.failed_attempts >= 10:
+            ip_block.is_blocked = True
+    else:
+        ip_block = IPBlock(
+            ip_address=ip_address,
+            failed_attempts=1,
+            last_attempt=db.func.current_timestamp()
+        )
+        db.session.add(ip_block)
+    
+    if user:
+        user.increment_failed_attempts()
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': False,
+        'message': '用户名或密码错误'
+    }), 401
 
 @app.route('/admin/logout')
 @login_required
@@ -338,6 +410,39 @@ def admin_delete_user(id):
     db.session.delete(user)
     db.session.commit()
     return jsonify({'message': 'User deleted successfully'})
+
+@app.route('/api/admin/users/<id>/unlock', methods=['POST'])
+@login_required
+def admin_unlock_user(id):
+    user = User.query.get_or_404(id)
+    user.is_locked = False
+    user.failed_login_attempts = 0
+    user.last_failed_login = None
+    db.session.commit()
+    return jsonify({'message': '用户已解锁'})
+
+@app.route('/api/admin/ip-blocks', methods=['GET'])
+@login_required
+def admin_get_ip_blocks():
+    ip_blocks = IPBlock.query.all()
+    return jsonify([{
+        'id': block.id,
+        'ip_address': block.ip_address,
+        'failed_attempts': block.failed_attempts,
+        'is_blocked': block.is_blocked,
+        'last_attempt': block.last_attempt,
+        'created_at': block.created_at
+    } for block in ip_blocks])
+
+@app.route('/api/admin/ip-blocks/<id>/unblock', methods=['POST'])
+@login_required
+def admin_unblock_ip(id):
+    ip_block = IPBlock.query.get_or_404(id)
+    ip_block.is_blocked = False
+    ip_block.failed_attempts = 0
+    ip_block.last_attempt = None
+    db.session.commit()
+    return jsonify({'message': 'IP已解封'})
 
 # 修改初始化数据库命令
 @app.cli.command('init-db')
