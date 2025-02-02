@@ -18,7 +18,7 @@ ssh -t www@home << 'EOF'
   cd /www/wwwroot/home.jayliu.co.nz
   git pull
   sudo docker compose down
-  sudo docker compose up -d
+  sudo docker compose up -d --build
 EOF
 
 echo "服务器更新完成！"
