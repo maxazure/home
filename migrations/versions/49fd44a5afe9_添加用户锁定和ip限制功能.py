@@ -23,6 +23,17 @@ def upgrade():
         batch_op.add_column(sa.Column('failed_login_attempts', sa.Integer(), nullable=True))
         batch_op.add_column(sa.Column('last_failed_login', sa.DateTime(), nullable=True))
 
+    # 创建IP封禁表
+    op.create_table('ip_blocks',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('ip_address', sa.String(45), unique=True, nullable=False),
+        sa.Column('failed_attempts', sa.Integer(), nullable=True),
+        sa.Column('is_blocked', sa.Boolean(), nullable=True),
+        sa.Column('last_attempt', sa.DateTime(), nullable=True),
+        sa.Column('created_at', sa.DateTime(), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('ip_address')
+    )
     # ### end Alembic commands ###
 
 
@@ -32,5 +43,7 @@ def downgrade():
         batch_op.drop_column('last_failed_login')
         batch_op.drop_column('failed_login_attempts')
         batch_op.drop_column('is_locked')
-
+    
+    # 删除IP封禁表
+    op.drop_table('ip_blocks')
     # ### end Alembic commands ###
