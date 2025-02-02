@@ -698,4 +698,138 @@ async function deleteSection(sectionName) {
         console.error('Error deleting section:', error);
         alert('删除失败，请重试');
     }
+}
+
+async function loadLinks() {
+    try {
+        const response = await fetch('/api/links');
+        const links = await response.json();
+        
+        // 按分类分组
+        const categoryGroups = {};
+        links.forEach(link => {
+            if (!categoryGroups[link.category_id]) {
+                categoryGroups[link.category_id] = {
+                    name: link.category_name, // 使用从数据库获取的分类名
+                    links: []
+                };
+            }
+            categoryGroups[link.category_id].links.push(link);
+        });
+        
+        const linksContainer = document.getElementById('links-container');
+        linksContainer.innerHTML = '';
+        
+        // 渲染每个分类的卡片
+        Object.entries(categoryGroups).forEach(([categoryId, {name, links}]) => {
+            const categoryCard = document.createElement('div');
+            categoryCard.className = 'bg-white shadow rounded-lg overflow-hidden mb-6';
+            categoryCard.innerHTML = `
+                <div class="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">${name}</h3>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="editCategory(${categoryId}, '${name}')" class="text-sm text-blue-600 hover:text-blue-800">修改分类名</button>
+                        <button onclick="deleteCategory(${categoryId})" class="text-sm text-red-600 hover:text-red-800">删除分类</button>
+                    </div>
+                </div>
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="space-y-4" id="links-${categoryId}">
+                        ${links.map(link => `
+                            <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg" 
+                                 draggable="true" 
+                                 ondragstart="dragStart(event, ${link.id})"
+                                 ondragend="dragEnd(event)"
+                                 ondragover="dragOver(event)"
+                                 ondragleave="dragLeave(event)"
+                                 ondrop="drop(event, ${link.id})"
+                                 data-link-id="${link.id}">
+                                <div class="flex-1">
+                                    <h4 class="text-base font-medium text-gray-900">${link.name} - ${link.url}</h4>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="editLink(${link.id}, '${link.name}', '${link.url}', ${link.category_id})"
+                                            class="text-blue-600 hover:text-blue-800">编辑</button>
+                                    <button onclick="deleteLink(${link.id})"
+                                            class="text-red-600 hover:text-red-900">删除</button>
+                                    <button onclick="moveLinkUp(${link.id})" class="text-gray-600 hover:text-gray-800">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    </button>
+                                    <button onclick="moveLinkDown(${link.id})" class="text-gray-600 hover:text-gray-800">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            linksContainer.appendChild(categoryCard);
+        });
+    } catch (error) {
+        console.error('Error loading links:', error);
+    }
+}
+
+// 添加 moveLinkUp 和 moveLinkDown 函数
+async function moveLinkUp(linkId) {
+    await moveLink(linkId, 'up');
+}
+
+async function moveLinkDown(linkId) {
+    await moveLink(linkId, 'down');
+}
+
+async function moveLink(linkId, direction) {
+    try {
+        const response = await fetch('/api/admin/links/move', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                link_id: linkId,
+                direction: direction
+            }),
+        });
+        
+        if (response.ok) {
+            await loadLinks();
+        } else {
+            const error = await response.json();
+            alert(error.message || '移动失败');
+        }
+    } catch (error) {
+        console.error('Error moving link:', error);
+        alert('移动失败，请重试');
+    }
+}
+
+// 确保 editCategory 函数正常工作
+function editCategory(categoryId, currentName) {
+    const newName = prompt('请输入新的分类名：', currentName);
+    if (newName && newName !== currentName) {
+        fetch(`/api/admin/categories/${categoryId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: newName }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadLinks(); // 更新页面
+            } else {
+                alert(data.message || '修改分类名失败');
+            }
+        })
+        .catch(error => {
+            console.error('Error editing category:', error);
+            alert('修改分类名失败，请重试');
+        });
+    }
 } 
