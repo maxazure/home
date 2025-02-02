@@ -377,6 +377,23 @@ def create_admin():
     db.session.commit()
     print('Admin user created successfully')
 
+@app.route('/api/auth/status')
+def auth_status():
+    if current_user.is_authenticated:
+        return jsonify({
+            'authenticated': True,
+            'username': current_user.username
+        })
+    return jsonify({
+        'authenticated': False
+    })
+
+@app.route('/api/auth/logout', methods=['POST'])
+@login_required
+def api_logout():
+    logout_user()
+    return jsonify({'success': True})
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # 确保应用启动时创建所有表
