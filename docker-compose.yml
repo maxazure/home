@@ -8,6 +8,7 @@ services:
       - "5001:5000"
     volumes:
       - ./migrations:/app/migrations
+      - ./instance:/app/instance
     environment:
       - FLASK_APP=app.py
       - DATABASE_URL=sqlite:////app/instance/links.db
@@ -17,10 +18,10 @@ services:
         max-file: "3"
     command: >
       sh -c "mkdir -p /app/instance &&
-             touch /app/instance/links.db &&
-             chmod 666 /app/instance/links.db &&
-             flask db init &&
+             [ ! -f /app/instance/links.db ] && touch /app/instance/links.db || true &&
+             [ ! -f /app/instance/links.db ] && chmod 666 /app/instance/links.db || true &&
+             [ ! -d /app/migrations ] && flask db init || true &&
              flask db migrate -m 'Initial migration' &&
              flask db upgrade &&
-             flask create-admin &&
+             [ ! -f /app/instance/links.db ] && flask create-admin || true &&
              gunicorn --bind 0.0.0.0:5000 app:app" 
