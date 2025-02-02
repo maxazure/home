@@ -220,8 +220,7 @@ docker compose up -d
 
 # 如果修改了 Dockerfile 或需要重新构建镜像
 docker compose down
-docker compose build  # 重新构建镜像
-docker compose up -d
+docker compose up -d --build  # 重新构建镜像并启动
 ```
 
 ### 后台界面说明
