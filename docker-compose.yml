@@ -22,7 +22,9 @@ services:
              touch /app/instance/links.db &&
              chmod -R 777 /app/instance &&
              chmod -R 777 /app/migrations &&
-             flask db init || true &&
+             if [ ! -d "/app/migrations" ] || [ -z "$(ls -A /app/migrations)" ]; then
+                 flask db init
+             fi &&
              flask db migrate -m 'Initial migration' || true &&
              flask db upgrade &&
              flask create-admin || true &&
