@@ -18,10 +18,12 @@ services:
         max-file: "3"
     command: >
       sh -c "mkdir -p /app/instance &&
-             [ ! -f /app/instance/links.db ] && touch /app/instance/links.db || true &&
-             [ ! -f /app/instance/links.db ] && chmod 666 /app/instance/links.db || true &&
-             [ ! -d /app/migrations ] && flask db init || true &&
-             flask db migrate -m 'Initial migration' &&
+             mkdir -p /app/migrations/versions &&
+             touch /app/instance/links.db &&
+             chmod -R 777 /app/instance &&
+             chmod -R 777 /app/migrations &&
+             flask db init || true &&
+             flask db migrate -m 'Initial migration' || true &&
              flask db upgrade &&
-             [ ! -f /app/instance/links.db ] && flask create-admin || true &&
+             flask create-admin || true &&
              gunicorn --bind 0.0.0.0:5000 app:app" 
