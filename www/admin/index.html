@@ -10,17 +10,13 @@
     <div class="min-h-full">
         <!-- 顶部导航栏 -->
         <nav class="bg-gray-800">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="w-full px-4 sm:px-6 lg:px-8">
                 <div class="flex h-16 items-center justify-between">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <h1 class="text-white font-bold text-xl">导航管理</h1>
-                        </div>
-                        <div class="hidden md:block">
-                            <div class="ml-10 flex items-baseline space-x-4">
-                                <a href="/admin/logout" class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">退出登录</a>
-                            </div>
-                        </div>
+                    <div class="flex-shrink-0">
+                        <h1 class="text-white font-bold text-xl">导航管理后台</h1>
+                    </div>
+                    <div>
+                        <a href="/admin/logout" class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">退出登录</a>
                     </div>
                 </div>
             </div>
@@ -64,7 +60,7 @@
             <div class="flex-1">
                 <header class="bg-white shadow">
                     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        <h1 class="text-3xl font-bold tracking-tight text-gray-900">导航管理后台</h1>
+                        <h1 id="main-title" class="text-3xl font-bold tracking-tight text-gray-900">分类管理</h1>
                     </div>
                 </header>
 
@@ -73,23 +69,17 @@
                         <!-- 分类管理部分 -->
                         <div id="categories-section" class="hidden">
                             <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-                                <h2 class="text-xl font-semibold text-gray-900">分类管理</h2>
-                                <button onclick="showAddCategoryModal()" class="btn btn-primary">添加分类</button>
+                                <div class="space-x-2">
+                                    <button onclick="showSectionModal()" class="btn btn-primary">添加区域</button>
+                                    <button onclick="showAddCategoryModal()" class="btn btn-primary">添加分类</button>
+                                </div>
                             </div>
                             <div class="mt-8 flow-root">
                                 <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                                     <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                                        <table class="min-w-full divide-y divide-gray-300">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">ID</th>
-                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">标题</th>
-                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">所属区域</th>
-                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">操作</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-gray-200" id="categories-table-body"></tbody>
-                                        </table>
+                                        <div id="categories-container" class="space-y-6">
+                                            <!-- 分类将通过JavaScript动态加载 -->
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -98,7 +88,6 @@
                         <!-- 链接管理部分 -->
                         <div id="links-section" class="hidden">
                             <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-                                <h2 class="text-xl font-semibold text-gray-900">链接管理</h2>
                                 <button onclick="showAddLinkModal()" class="btn btn-primary">添加链接</button>
                             </div>
                             <div class="mt-8 space-y-8" id="links-container">
@@ -109,7 +98,6 @@
                         <!-- 用户管理部分 -->
                         <div id="users-section" class="hidden">
                             <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-                                <h2 class="text-xl font-semibold text-gray-900">用户管理</h2>
                                 <button onclick="showAddUserModal()" class="btn btn-primary">添加用户</button>
                             </div>
                             <div class="mt-8 flow-root">
@@ -230,7 +218,7 @@
                 <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
                     <div>
                         <h3 id="section-modal-title" class="text-lg font-medium leading-6 text-gray-900 mb-4">添加新区域</h3>
-                        <form id="section-form" class="space-y-4">
+                        <form id="section-form" class="space-y-4" onsubmit="handleSectionSubmit(event)">
                             <input type="hidden" id="old-section-name">
                             <div>
                                 <label for="section-name-input" class="block text-sm font-medium text-gray-700">区域名称</label>

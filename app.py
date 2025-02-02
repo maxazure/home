@@ -60,7 +60,7 @@ class IPBlock(db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 # 模型定义
 class Category(db.Model):
@@ -134,7 +134,9 @@ def get_categories():
 
 @app.route('/api/categories/<id>', methods=['GET'])
 def get_category(id):
-    category = Category.query.get_or_404(id)
+    category = db.session.get(Category, id)
+    if not category:
+        return jsonify({'message': '分类不存在'}), 404
     return jsonify(category_schema.dump(category))
 
 @app.route('/api/categories', methods=['POST'])
@@ -150,7 +152,9 @@ def add_category():
 
 @app.route('/api/categories/<id>', methods=['PUT'])
 def update_category(id):
-    category = Category.query.get_or_404(id)
+    category = db.session.get(Category, id)
+    if not category:
+        return jsonify({'message': '分类不存在'}), 404
     
     category.title = request.json.get('title', category.title)
     category.section_name = request.json.get('section_name', category.section_name)
@@ -160,7 +164,9 @@ def update_category(id):
 
 @app.route('/api/categories/<id>', methods=['DELETE'])
 def delete_category(id):
-    category = Category.query.get_or_404(id)
+    category = db.session.get(Category, id)
+    if not category:
+        return jsonify({'message': '分类不存在'}), 404
     db.session.delete(category)
     db.session.commit()
     return jsonify({'message': 'Category deleted successfully'})
@@ -173,7 +179,9 @@ def get_links():
 
 @app.route('/api/links/<id>', methods=['GET'])
 def get_link(id):
-    link = Link.query.get_or_404(id)
+    link = db.session.get(Link, id)
+    if not link:
+        return jsonify({'message': '链接不存在'}), 404
     return jsonify(link_schema.dump(link))
 
 @app.route('/api/links', methods=['POST'])
@@ -190,7 +198,9 @@ def add_link():
 
 @app.route('/api/links/<id>', methods=['PUT'])
 def update_link(id):
-    link = Link.query.get_or_404(id)
+    link = db.session.get(Link, id)
+    if not link:
+        return jsonify({'message': '链接不存在'}), 404
     
     link.name = request.json.get('name', link.name)
     link.url = request.json.get('url', link.url)
@@ -201,7 +211,9 @@ def update_link(id):
 
 @app.route('/api/links/<id>', methods=['DELETE'])
 def delete_link(id):
-    link = Link.query.get_or_404(id)
+    link = db.session.get(Link, id)
+    if not link:
+        return jsonify({'message': '链接不存在'}), 404
     db.session.delete(link)
     db.session.commit()
     return jsonify({'message': 'Link deleted successfully'})
@@ -312,7 +324,9 @@ def admin_add_category():
 @app.route('/api/admin/categories/<id>', methods=['PUT'])
 @login_required
 def admin_update_category(id):
-    category = Category.query.get_or_404(id)
+    category = db.session.get(Category, id)
+    if not category:
+        return jsonify({'message': '分类不存在'}), 404
     
     category.title = request.json.get('title', category.title)
     category.section_name = request.json.get('section_name', category.section_name)
@@ -324,7 +338,9 @@ def admin_update_category(id):
 @login_required
 def admin_delete_category(id):
     try:
-        category = Category.query.get_or_404(id)
+        category = db.session.get(Category, id)
+        if not category:
+            return jsonify({'message': '分类不存在'}), 404
         # 先删除该分类下的所有链接
         Link.query.filter_by(category_id=id).delete()
         # 再删除分类
@@ -351,7 +367,9 @@ def admin_add_link():
 @app.route('/api/admin/links/<id>', methods=['PUT'])
 @login_required
 def admin_update_link(id):
-    link = Link.query.get_or_404(id)
+    link = db.session.get(Link, id)
+    if not link:
+        return jsonify({'message': '链接不存在'}), 404
     
     link.name = request.json.get('name', link.name)
     link.url = request.json.get('url', link.url)
@@ -363,7 +381,9 @@ def admin_update_link(id):
 @app.route('/api/admin/links/<id>', methods=['DELETE'])
 @login_required
 def admin_delete_link(id):
-    link = Link.query.get_or_404(id)
+    link = db.session.get(Link, id)
+    if not link:
+        return jsonify({'message': '链接不存在'}), 404
     db.session.delete(link)
     db.session.commit()
     return jsonify({'message': 'Link deleted successfully'})
@@ -394,7 +414,9 @@ def admin_add_user():
 @app.route('/api/admin/users/<id>', methods=['PUT'])
 @login_required
 def admin_update_user(id):
-    user = User.query.get_or_404(id)
+    user = db.session.get(User, id)
+    if not user:
+        return jsonify({'message': '用户不存在'}), 404
     
     username = request.json.get('username')
     password = request.json.get('password')
@@ -413,7 +435,9 @@ def admin_update_user(id):
 @app.route('/api/admin/users/<id>', methods=['DELETE'])
 @login_required
 def admin_delete_user(id):
-    user = User.query.get_or_404(id)
+    user = db.session.get(User, id)
+    if not user:
+        return jsonify({'message': '用户不存在'}), 404
     
     # 防止删除最后一个管理员账户
     if User.query.count() == 1:
@@ -426,7 +450,9 @@ def admin_delete_user(id):
 @app.route('/api/admin/users/<id>/unlock', methods=['POST'])
 @login_required
 def admin_unlock_user(id):
-    user = User.query.get_or_404(id)
+    user = db.session.get(User, id)
+    if not user:
+        return jsonify({'message': '用户不存在'}), 404
     user.is_locked = False
     user.failed_login_attempts = 0
     user.last_failed_login = None
@@ -449,7 +475,9 @@ def admin_get_ip_blocks():
 @app.route('/api/admin/ip-blocks/<id>/unblock', methods=['POST'])
 @login_required
 def admin_unblock_ip(id):
-    ip_block = IPBlock.query.get_or_404(id)
+    ip_block = db.session.get(IPBlock, id)
+    if not ip_block:
+        return jsonify({'message': 'IP记录不存在'}), 404
     ip_block.is_blocked = False
     ip_block.failed_attempts = 0
     ip_block.last_attempt = None
@@ -460,107 +488,127 @@ def admin_unblock_ip(id):
 @app.route('/api/admin/sections', methods=['POST'])
 @login_required
 def admin_add_section():
-    new_name = request.json.get('new_name')
-    if not new_name:
+    data = request.get_json()
+    section_name = data.get('section_name')
+    
+    if not section_name:
         return jsonify({'message': '区域名称不能为空'}), 400
-    
+        
     # 检查区域名称是否已存在
-    if Category.query.filter_by(section_name=new_name).first():
+    if Category.query.filter_by(section_name=section_name).first():
         return jsonify({'message': '区域名称已存在'}), 400
-    
-    # 获取当前最大排序值
+        
+    # 获取最大的 section_order
     max_order = db.session.query(db.func.max(Category.section_order)).scalar() or 0
     
-    # 创建一个空分类来代表新区域
-    category = Category(
-        title='默认分类',
-        section_name=new_name,
+    # 创建新分类作为区域的占位
+    new_category = Category(
+        title=f"{section_name} 默认分类",
+        section_name=section_name,
         section_order=max_order + 1
     )
-    db.session.add(category)
-    db.session.commit()
     
-    return jsonify({'message': '区域添加成功'})
+    try:
+        db.session.add(new_category)
+        db.session.commit()
+        return jsonify({'message': '区域添加成功', 'section_name': section_name}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'添加区域失败: {str(e)}'}), 500
 
-@app.route('/api/admin/sections', methods=['PUT'])
+@app.route('/api/admin/sections/update', methods=['POST'])
 @login_required
 def admin_update_section():
-    new_name = request.json.get('new_name')
-    old_name = request.json.get('old_name')
+    data = request.get_json()
+    old_section_name = data.get('old_section_name')
+    new_section_name = data.get('section_name')
     
-    if not new_name or not old_name:
+    if not new_section_name:
         return jsonify({'message': '区域名称不能为空'}), 400
-    
-    if new_name != old_name and Category.query.filter_by(section_name=new_name).first():
-        return jsonify({'message': '新区域名称已存在'}), 400
-    
-    # 更新所有相关分类的区域名称
-    categories = Category.query.filter_by(section_name=old_name).all()
-    for category in categories:
-        category.section_name = new_name
-    
-    db.session.commit()
-    return jsonify({'message': '区域更新成功'})
+        
+    if not old_section_name:
+        return jsonify({'message': '原区域名称不能为空'}), 400
+        
+    # 检查新区域名称是否已存在（排除当前区域）
+    if Category.query.filter(
+        Category.section_name == new_section_name,
+        Category.section_name != old_section_name
+    ).first():
+        return jsonify({'message': '区域名称已存在'}), 400
+        
+    try:
+        # 更新所有相关分类的区域名称
+        categories = Category.query.filter_by(section_name=old_section_name).all()
+        for category in categories:
+            category.section_name = new_section_name
+        
+        db.session.commit()
+        return jsonify({'message': '区域更新成功', 'section_name': new_section_name}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'更新区域失败: {str(e)}'}), 500
 
 @app.route('/api/admin/sections/reorder', methods=['POST'])
 @login_required
-def admin_reorder_section():
-    section_name = request.json.get('section_name')
-    direction = request.json.get('direction')
+def admin_reorder_sections():
+    data = request.get_json()
+    section_name = data.get('section_name')
+    direction = data.get('direction')
     
     if not section_name or not direction:
         return jsonify({'message': '参数不完整'}), 400
-    
-    # 获取当前区域的所有分类
-    current_categories = Category.query.filter_by(section_name=section_name).all()
-    if not current_categories:
-        return jsonify({'message': '区域不存在'}), 404
-    
-    current_order = current_categories[0].section_order
-    
-    if direction == 'up':
-        # 获取上一个区域
-        prev_category = Category.query.filter(
-            Category.section_order < current_order
-        ).order_by(Category.section_order.desc()).first()
         
-        if prev_category:
-            # 交换排序值
-            prev_order = prev_category.section_order
-            prev_section_name = prev_category.section_name
+    try:
+        # 获取当前区域的所有分类
+        current_categories = Category.query.filter_by(section_name=section_name).all()
+        if not current_categories:
+            return jsonify({'message': '区域不存在'}), 404
             
-            # 更新所有相关分类的排序值
-            Category.query.filter_by(section_name=prev_section_name).update(
-                {'section_order': current_order}
-            )
-            Category.query.filter_by(section_name=section_name).update(
-                {'section_order': prev_order}
-            )
-            
-            db.session.commit()
-    
-    elif direction == 'down':
-        # 获取下一个区域
-        next_category = Category.query.filter(
-            Category.section_order > current_order
-        ).order_by(Category.section_order).first()
+        current_order = current_categories[0].section_order
         
-        if next_category:
-            # 交换排序值
-            next_order = next_category.section_order
-            next_section_name = next_category.section_name
+        if direction == 'up':
+            # 获取上一个区域
+            prev_category = Category.query.filter(
+                Category.section_order < current_order
+            ).order_by(Category.section_order.desc()).first()
             
-            # 更新所有相关分类的排序值
-            Category.query.filter_by(section_name=next_section_name).update(
-                {'section_order': current_order}
-            )
-            Category.query.filter_by(section_name=section_name).update(
-                {'section_order': next_order}
-            )
+            if prev_category:
+                # 交换顺序
+                prev_order = prev_category.section_order
+                prev_section_name = prev_category.section_name
+                
+                # 更新所有相关分类的顺序
+                Category.query.filter_by(section_name=prev_section_name).update(
+                    {"section_order": current_order}
+                )
+                Category.query.filter_by(section_name=section_name).update(
+                    {"section_order": prev_order}
+                )
+                
+        elif direction == 'down':
+            # 获取下一个区域
+            next_category = Category.query.filter(
+                Category.section_order > current_order
+            ).order_by(Category.section_order).first()
             
-            db.session.commit()
-    
-    return jsonify({'message': '排序更新成功'})
+            if next_category:
+                # 交换顺序
+                next_order = next_category.section_order
+                next_section_name = next_category.section_name
+                
+                # 更新所有相关分类的顺序
+                Category.query.filter_by(section_name=next_section_name).update(
+                    {"section_order": current_order}
+                )
+                Category.query.filter_by(section_name=section_name).update(
+                    {"section_order": next_order}
+                )
+        
+        db.session.commit()
+        return jsonify({'message': '区域排序更新成功'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'更新区域排序失败: {str(e)}'}), 500
 
 @app.route('/api/admin/categories/reorder', methods=['POST'])
 @login_required
@@ -651,6 +699,34 @@ def admin_move_category():
             db.session.commit()
     
     return jsonify({'message': '移动成功'})
+
+@app.route('/api/admin/sections/delete', methods=['POST'])
+@login_required
+def admin_delete_section():
+    data = request.get_json()
+    section_name = data.get('section_name')
+    
+    if not section_name:
+        return jsonify({'message': '区域名称不能为空'}), 400
+        
+    try:
+        # 获取该区域下的所有分类
+        categories = Category.query.filter_by(section_name=section_name).all()
+        if not categories:
+            return jsonify({'message': '区域不存在'}), 404
+            
+        # 删除每个分类下的所有链接
+        for category in categories:
+            Link.query.filter_by(category_id=category.id).delete()
+            
+        # 删除该区域下的所有分类
+        Category.query.filter_by(section_name=section_name).delete()
+        
+        db.session.commit()
+        return jsonify({'message': '区域删除成功'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'删除区域失败: {str(e)}'}), 500
 
 # 修改初始化数据库命令
 @app.cli.command('init-db')

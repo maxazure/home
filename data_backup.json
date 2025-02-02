@@ -2,80 +2,101 @@
   "categories": [
     {
       "id": 1,
-      "title": "必备网站 1",
+      "title": "必备网站",
       "section_name": "常用网址",
-      "section_order": null,
-      "category_order": null
+      "section_order": 1,
+      "category_order": 2
     },
     {
       "id": 2,
       "title": "编程",
       "section_name": "常用网址",
-      "section_order": null,
-      "category_order": null
+      "section_order": 1,
+      "category_order": 1
     },
     {
       "id": 3,
       "title": "生活与购物",
       "section_name": "常用网址",
-      "section_order": null,
-      "category_order": null
+      "section_order": 1,
+      "category_order": 3
     },
     {
       "id": 4,
       "title": "游戏网站",
       "section_name": "常用网址",
-      "section_order": null,
-      "category_order": null
+      "section_order": 1,
+      "category_order": 4
     },
     {
       "id": 5,
       "title": "设计",
       "section_name": "常用网址",
-      "section_order": null,
-      "category_order": null
+      "section_order": 1,
+      "category_order": 5
     },
     {
       "id": 6,
       "title": "3D打印模型",
       "section_name": "常用网址",
-      "section_order": null,
-      "category_order": null
+      "section_order": 1,
+      "category_order": 6
     },
     {
       "id": 7,
       "title": "工作常用",
       "section_name": "学习",
-      "section_order": null,
-      "category_order": null
+      "section_order": 2,
+      "category_order": 1
     },
     {
       "id": 8,
       "title": "文件共享",
       "section_name": "学习",
-      "section_order": null,
-      "category_order": null
+      "section_order": 2,
+      "category_order": 2
     },
     {
       "id": 9,
-      "title": "私有云",
+      "title": "共享文件夹",
       "section_name": "家庭",
-      "section_order": null,
-      "category_order": null
+      "section_order": 3,
+      "category_order": 1
     },
     {
       "id": 10,
-      "title": "共享文件夹",
+      "title": "PROJECTS",
       "section_name": "家庭",
-      "section_order": null,
-      "category_order": null
+      "section_order": 3,
+      "category_order": 2
     },
     {
       "id": 11,
-      "title": "PROJECTS",
-      "section_name": "家庭",
-      "section_order": null,
-      "category_order": null
+      "title": "默认分类",
+      "section_name": "AI 相关",
+      "section_order": 4,
+      "category_order": 0
+    },
+    {
+      "id": 12,
+      "title": "AI 相关",
+      "section_name": "常用网址",
+      "section_order": 0,
+      "category_order": 7
+    },
+    {
+      "id": 13,
+      "title": "默认分类",
+      "section_name": "AI",
+      "section_order": 5,
+      "category_order": 0
+    },
+    {
+      "id": 14,
+      "title": "生产力",
+      "section_name": "发的发",
+      "section_order": 6,
+      "category_order": 0
     }
   ],
   "links": [
@@ -159,177 +180,123 @@
     },
     {
       "id": 14,
-      "name": "POKI",
-      "url": "https://poki.com/zh",
+      "name": "Steam",
+      "url": "https://store.steampowered.com/",
       "category_id": 4
     },
     {
       "id": 15,
-      "name": "7k7k小游戏",
-      "url": "http://www.7k7k.com/",
+      "name": "Epic Games",
+      "url": "https://www.epicgames.com/",
       "category_id": 4
     },
     {
       "id": 16,
-      "name": "CANVA AI作图工具",
-      "url": "https://www.canva.com/",
-      "category_id": 5
+      "name": "GOG",
+      "url": "https://www.gog.com/",
+      "category_id": 4
     },
     {
       "id": 17,
-      "name": "Figma 原型设计工具",
+      "name": "Figma",
       "url": "https://www.figma.com/",
       "category_id": 5
     },
     {
       "id": 18,
-      "name": "Thingiverse",
-      "url": "https://www.thingiverse.com",
-      "category_id": 6
+      "name": "Dribbble",
+      "url": "https://dribbble.com/",
+      "category_id": 5
     },
     {
       "id": 19,
-      "name": "Printables",
-      "url": "https://www.printables.com",
-      "category_id": 6
+      "name": "Behance",
+      "url": "https://www.behance.net/",
+      "category_id": 5
     },
     {
       "id": 20,
-      "name": "MyMiniFactory",
-      "url": "https://www.myminifactory.com",
+      "name": "Thingiverse",
+      "url": "https://www.thingiverse.com/",
       "category_id": 6
     },
     {
       "id": 21,
-      "name": "Cults",
-      "url": "https://cults3d.com",
+      "name": "Printables",
+      "url": "https://www.printables.com/",
       "category_id": 6
     },
     {
       "id": 22,
-      "name": "Pinshape",
-      "url": "https://www.pinshape.com",
+      "name": "MyMiniFactory",
+      "url": "https://www.myminifactory.com/",
       "category_id": 6
     },
     {
       "id": 23,
-      "name": "CGTrader",
-      "url": "https://www.cgtrader.com",
-      "category_id": 6
+      "name": "Jira",
+      "url": "https://www.atlassian.com/software/jira",
+      "category_id": 7
     },
     {
       "id": 24,
-      "name": "GrabCAD",
-      "url": "https://grabcad.com",
-      "category_id": 6
+      "name": "Confluence",
+      "url": "https://www.atlassian.com/software/confluence",
+      "category_id": 7
     },
     {
       "id": 25,
-      "name": "TurboSquid",
-      "url": "https://www.turbosquid.com",
-      "category_id": 6
+      "name": "Slack",
+      "url": "https://slack.com/",
+      "category_id": 7
     },
     {
       "id": 26,
-      "name": "1stdomains",
-      "url": "https://1stdomains.nz/",
-      "category_id": 7
+      "name": "Google Drive",
+      "url": "https://drive.google.com/",
+      "category_id": 8
     },
     {
       "id": 27,
-      "name": "Microsoft Teams",
-      "url": "https://www.microsoft.com/en/microsoft-teams/group-chat-software",
-      "category_id": 7
+      "name": "Dropbox",
+      "url": "https://www.dropbox.com/",
+      "category_id": 8
     },
     {
       "id": 28,
-      "name": "Aliyun",
-      "url": "https://account.aliyun.com/",
-      "category_id": 7
+      "name": "OneDrive",
+      "url": "https://onedrive.live.com/",
+      "category_id": 8
     },
     {
       "id": 29,
-      "name": "腾讯云",
-      "url": "https://console.cloud.tencent.com/",
-      "category_id": 7
+      "name": "\\\\192.168.31.205\\data",
+      "url": "",
+      "category_id": 9
     },
     {
       "id": 30,
-      "name": "Google Drive",
-      "url": "https://drive.google.com",
-      "category_id": 8
+      "name": "Apple Music",
+      "url": "https://www.apple.com/apple-music/",
+      "category_id": 9
     },
     {
       "id": 31,
-      "name": "Dropbox",
-      "url": "https://www.dropbox.com",
-      "category_id": 8
+      "name": "修改Home网址导航",
+      "url": "http://192.168.31.205:8081/?folder=/www/wwwroot/home.jayliu.co.nz",
+      "category_id": 9
     },
     {
       "id": 32,
-      "name": "Portainer(Docker)",
-      "url": "http://192.168.31.205:9000/",
-      "category_id": 9
+      "name": "KTATTOO",
+      "url": "https://www.ktattoo.co.nz",
+      "category_id": 10
     },
     {
       "id": 33,
-      "name": "PVE",
-      "url": "https://192.168.31.221:8006/",
-      "category_id": 9
-    },
-    {
-      "id": 34,
-      "name": "Baota",
-      "url": "https://192.168.31.205:12006/jayliu",
-      "category_id": 9
-    },
-    {
-      "id": 35,
-      "name": "Teamcity",
-      "url": "https://teamcity.jayliu.co.nz/",
-      "category_id": 9
-    },
-    {
-      "id": 36,
-      "name": "Home Assistant",
-      "url": "http://192.168.31.198:8123/",
-      "category_id": 9
-    },
-    {
-      "id": 37,
-      "name": "家庭相册",
-      "url": "http://192.168.31.143:9989/",
-      "category_id": 9
-    },
-    {
-      "id": 38,
-      "name": "\\\\192.168.31.205\\data",
-      "url": "",
-      "category_id": 10
-    },
-    {
-      "id": 39,
-      "name": "Apple Music",
-      "url": "https://www.apple.com/apple-music/",
-      "category_id": 10
-    },
-    {
-      "id": 40,
-      "name": "修改Home网址导航",
-      "url": "http://192.168.31.205:8081/?folder=/www/wwwroot/home.jayliu.co.nz",
-      "category_id": 10
-    },
-    {
-      "id": 41,
-      "name": "KTATTOO",
-      "url": "https://www.ktattoo.co.nz",
-      "category_id": 11
-    },
-    {
-      "id": 42,
       "name": "云想门店",
       "url": "https://admin.storeyx.com/",
-      "category_id": 11
+      "category_id": 10
     }
   ]
 }

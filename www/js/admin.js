@@ -8,8 +8,14 @@ document.addEventListener('DOMContentLoaded', () => {
     showCategories();
 });
 
+// 更新页面标题
+function updatePageTitle(title) {
+    document.getElementById('main-title').textContent = title;
+}
+
 // 显示分类管理页面
 async function showCategories() {
+    updatePageTitle('分类管理');
     document.getElementById('categories-section').classList.remove('hidden');
     document.getElementById('links-section').classList.add('hidden');
     document.getElementById('users-section').classList.add('hidden');
@@ -18,6 +24,7 @@ async function showCategories() {
 
 // 显示链接管理页面
 async function showLinks() {
+    updatePageTitle('链接管理');
     document.getElementById('categories-section').classList.add('hidden');
     document.getElementById('links-section').classList.remove('hidden');
     document.getElementById('users-section').classList.add('hidden');
@@ -26,6 +33,7 @@ async function showLinks() {
 
 // 显示用户管理页面
 async function showUsers() {
+    updatePageTitle('用户管理');
     document.getElementById('categories-section').classList.add('hidden');
     document.getElementById('links-section').classList.add('hidden');
     document.getElementById('users-section').classList.remove('hidden');
@@ -47,29 +55,25 @@ async function loadCategories() {
             sectionGroups[category.section_name].push(category);
         });
         
-        const container = document.getElementById('categories-section');
-        const content = document.createElement('div');
-        content.className = 'space-y-6';
-        
-        // 添加新区域的按钮
-        content.innerHTML = `
-            <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-900">分类管理</h2>
-                <button onclick="showAddSectionModal()" class="btn btn-primary">添加新区域</button>
-            </div>
-        `;
+        const container = document.getElementById('categories-container');
+        container.innerHTML = ''; // 清空现有内容
         
         // 渲染每个区域的卡片
         Object.entries(sectionGroups).forEach(([sectionName, categories]) => {
             const sectionCard = document.createElement('div');
-            sectionCard.className = 'bg-white shadow rounded-lg overflow-hidden';
+            sectionCard.className = 'bg-white shadow rounded-lg overflow-hidden mb-6';
             sectionCard.innerHTML = `
                 <div class="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-gray-200">
                     <div class="flex items-center space-x-4">
                         <h3 class="text-lg font-medium text-gray-900">${sectionName}</h3>
-                        <button onclick="editSection('${sectionName}')" class="text-sm text-blue-600 hover:text-blue-800">
-                            修改区域名称
-                        </button>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="showSectionModal('${sectionName}')" class="text-sm text-blue-600 hover:text-blue-800">
+                                修改区域名称
+                            </button>
+                            <button onclick="deleteSection('${sectionName}')" class="text-sm text-red-600 hover:text-red-800">
+                                删除区域
+                            </button>
+                        </div>
                     </div>
                     <div class="flex items-center space-x-2">
                         <button onclick="showAddCategoryModal('${sectionName}')" class="btn btn-primary">
@@ -122,17 +126,11 @@ async function loadCategories() {
                     </div>
                 </div>
             `;
-            content.appendChild(sectionCard);
+            container.appendChild(sectionCard);
         });
-        
-        // 清空并添加新内容
-        const oldContent = container.querySelector('.space-y-6');
-        if (oldContent) {
-            container.removeChild(oldContent);
-        }
-        container.appendChild(content);
     } catch (error) {
         console.error('Error loading categories:', error);
+        alert('加载分类失败，请重试');
     }
 }
 
@@ -201,19 +199,64 @@ async function reorderCategories(sourceCategoryId, targetCategoryId) {
     }
 }
 
-// 显示添加区域模态框
-function showAddSectionModal() {
-    document.getElementById('section-modal-title').textContent = '添加新区域';
-    document.getElementById('section-name-input').value = '';
-    document.getElementById('section-modal').classList.remove('hidden');
-}
-
-// 编辑区域名称
-function editSection(sectionName) {
-    document.getElementById('section-modal-title').textContent = '修改区域名称';
+// 显示区域管理模态框
+function showSectionModal(sectionName = '') {
+    document.getElementById('section-modal-title').textContent = sectionName ? '修改区域名称' : '添加新区域';
     document.getElementById('section-name-input').value = sectionName;
     document.getElementById('old-section-name').value = sectionName;
     document.getElementById('section-modal').classList.remove('hidden');
+    
+    // 确保表单重置
+    const form = document.getElementById('section-form');
+    form.reset();
+    if (sectionName) {
+        document.getElementById('section-name-input').value = sectionName;
+    }
+}
+
+// 处理区域表单提交
+async function handleSectionSubmit(event) {
+    event.preventDefault();
+    const sectionNameInput = document.getElementById('section-name-input');
+    const oldSectionName = document.getElementById('old-section-name').value;
+    const newSectionName = sectionNameInput.value.trim();
+
+    if (!newSectionName) {
+        alert('请输入区域名称');
+        return;
+    }
+
+    try {
+        const url = oldSectionName ? '/api/admin/sections/update' : '/api/admin/sections';
+        const data = {
+            section_name: newSectionName,
+            old_section_name: oldSectionName
+        };
+        
+        console.log('发送请求到:', url);
+        console.log('发送数据:', data);
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        const responseData = await response.json();
+        console.log('服务器响应:', responseData);
+        
+        if (response.ok) {
+            closeModal('section-modal');
+            await loadCategories();
+        } else {
+            alert(responseData.message || '操作失败');
+        }
+    } catch (error) {
+        console.error('Error handling section:', error);
+        alert('操作失败，请重试');
+    }
 }
 
 // 移动区域位置
@@ -627,34 +670,32 @@ function updateUserSection(data) {
     }
 }
 
-// 处理区域表单提交
-document.getElementById('section-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const newSectionName = document.getElementById('section-name-input').value;
-    const oldSectionName = document.getElementById('old-section-name').value;
-    
+// 删除区域
+async function deleteSection(sectionName) {
+    if (!confirm(`确定要删除区域 "${sectionName}" 吗？\n注意：这将同时删除该区域下的所有分类和链接！`)) {
+        return;
+    }
+
     try {
-        const response = await fetch('/api/admin/sections', {
-            method: oldSectionName ? 'PUT' : 'POST',
+        const response = await fetch('/api/admin/sections/delete', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                new_name: newSectionName,
-                old_name: oldSectionName
-            }),
+            body: JSON.stringify({
+                section_name: sectionName
+            })
         });
+
+        const data = await response.json();
         
         if (response.ok) {
-            closeModal('section-modal');
             await loadCategories();
         } else {
-            const error = await response.json();
-            alert(error.message || '操作失败');
+            alert(data.message || '删除失败');
         }
     } catch (error) {
-        console.error('Error saving section:', error);
-        alert('保存失败，请重试');
+        console.error('Error deleting section:', error);
+        alert('删除失败，请重试');
     }
-}); 
+} 

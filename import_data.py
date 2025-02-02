@@ -104,11 +104,13 @@ def import_data(filename=None):
                 data = [
                     {
                         "sectionName": "常用网址",
+                        "section_order": 1,
                         "rows": [
                             {
                                 "columns": [
                                     {
                                         "title": "必备网站",
+                                        "category_order": 1,
                                         "links": [
                                             {"name": "Google", "url": "https://www.google.com"},
                                             {"name": "ChatGPT", "url": "https://chat.openai.com"},
@@ -118,6 +120,7 @@ def import_data(filename=None):
                                     },
                                     {
                                         "title": "编程",
+                                        "category_order": 2,
                                         "links": [
                                             {"name": "Stack Overflow", "url": "https://stackoverflow.com"},
                                             {"name": "GitHub", "url": "https://github.com"},
@@ -127,6 +130,7 @@ def import_data(filename=None):
                                     },
                                     {
                                         "title": "生活与购物",
+                                        "category_order": 3,
                                         "links": [
                                             {"name": "新西兰比价网（PriceSpy）", "url": "https://www.pricespy.co.nz/"},
                                             {"name": "Bunnings", "url": "https://www.bunnings.co.nz/"},
@@ -141,6 +145,7 @@ def import_data(filename=None):
                                 "columns": [
                                     {
                                         "title": "游戏网站",
+                                        "category_order": 4,
                                         "links": [
                                             {"name": "Steam", "url": "https://store.steampowered.com/"},
                                             {"name": "Epic Games", "url": "https://www.epicgames.com/"},
@@ -149,6 +154,7 @@ def import_data(filename=None):
                                     },
                                     {
                                         "title": "设计",
+                                        "category_order": 5,
                                         "links": [
                                             {"name": "Figma", "url": "https://www.figma.com/"},
                                             {"name": "Dribbble", "url": "https://dribbble.com/"},
@@ -157,6 +163,7 @@ def import_data(filename=None):
                                     },
                                     {
                                         "title": "3D打印模型",
+                                        "category_order": 6,
                                         "links": [
                                             {"name": "Thingiverse", "url": "https://www.thingiverse.com/"},
                                             {"name": "Printables", "url": "https://www.printables.com/"},
@@ -169,11 +176,13 @@ def import_data(filename=None):
                     },
                     {
                         "sectionName": "学习",
+                        "section_order": 2,
                         "rows": [
                             {
                                 "columns": [
                                     {
                                         "title": "工作常用",
+                                        "category_order": 1,
                                         "links": [
                                             {"name": "Jira", "url": "https://www.atlassian.com/software/jira"},
                                             {"name": "Confluence", "url": "https://www.atlassian.com/software/confluence"},
@@ -182,6 +191,7 @@ def import_data(filename=None):
                                     },
                                     {
                                         "title": "文件共享",
+                                        "category_order": 2,
                                         "links": [
                                             {"name": "Google Drive", "url": "https://drive.google.com/"},
                                             {"name": "Dropbox", "url": "https://www.dropbox.com/"},
@@ -194,11 +204,13 @@ def import_data(filename=None):
                     },
                     {
                         "sectionName": "家庭",
+                        "section_order": 3,
                         "rows": [
                             {
                                 "columns": [
                                     {
                                         "title": "共享文件夹",
+                                        "category_order": 1,
                                         "links": [
                                             {"name": "\\\\192.168.31.205\\data", "url": ""},
                                             {"name": "Apple Music", "url": "https://www.apple.com/apple-music/"},
@@ -207,6 +219,7 @@ def import_data(filename=None):
                                     },
                                     {
                                         "title": "PROJECTS",
+                                        "category_order": 2,
                                         "links": [
                                             {"name": "KTATTOO", "url": "https://www.ktattoo.co.nz"},
                                             {"name": "云想门店", "url": "https://admin.storeyx.com/"}
@@ -264,9 +277,9 @@ def import_data(filename=None):
             # 导入新数据
             try:
                 # 记录每个区域的顺序
-                for section_index, section in enumerate(data, 1):
+                for section in data:
                     section_name = section['sectionName']
-                    category_order = 1  # 每个区域内的分类顺序从1开始
+                    section_order = section['section_order']
                     
                     for row in section['rows']:
                         for column in row['columns']:
@@ -274,8 +287,8 @@ def import_data(filename=None):
                             category = Category(
                                 title=column['title'],
                                 section_name=section_name,
-                                section_order=section_index,  # 区域顺序
-                                category_order=category_order  # 分类顺序
+                                section_order=section_order,
+                                category_order=column['category_order']
                             )
                             db.session.add(category)
                             db.session.commit()
@@ -289,8 +302,6 @@ def import_data(filename=None):
                                 )
                                 db.session.add(link)
                             db.session.commit()
-                            
-                            category_order += 1  # 增加分类顺序
                 
                 # 重置 admin 用户状态
                 admin = User.query.filter_by(username='admin').first()
