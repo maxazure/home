@@ -18,13 +18,4 @@ services:
         max-size: "10m"
         max-file: "3"
     command: >
-      sh -c "mkdir -p /app/instance &&
-             mkdir -p /app/migrations/versions &&
-             touch /app/instance/links.db &&
-             if [ ! -d \"/app/migrations\" ] || [ -z \"$(ls -A /app/migrations)\" ]; then
-                 flask db init
-             fi &&
-             flask db migrate -m 'Initial migration' || true &&
-             flask db upgrade &&
-             flask create-admin || true &&
-             gunicorn --bind 0.0.0.0:5000 app:app" 
+      sh -c "gunicorn --bind 0.0.0.0:5000 app:app" 
