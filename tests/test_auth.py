@@ -24,14 +24,32 @@ class AuthTestCase(unittest.TestCase):
             db.session.remove()
             db.drop_all()
     
-    def test_successful_login(self):
-        """测试成功登录"""
-        with app.app_context():
-            response = self.client.post('/admin/login', 
-                json={'username': 'testuser', 'password': 'testpass'})
-            data = json.loads(response.data)
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(data['success'])
+    def test_login_success(self):
+        """测试登录成功"""
+        response = self.client.post('/api/admin/login',
+            json={'username': 'testuser', 'password': 'testpass'})
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(data['success'])
+    
+    def test_login_wrong_password(self):
+        """测试密码错误"""
+        response = self.client.post('/api/admin/login',
+            json={'username': 'testuser', 'password': 'wrongpass'})
+        self.assertEqual(response.status_code, 401)
+    
+    def test_login_nonexistent_user(self):
+        """测试用户不存在"""
+        response = self.client.post('/api/admin/login',
+            json={'username': 'nonexistentuser', 'password': 'wrongpass'})
+        self.assertEqual(response.status_code, 401)
+    
+    def test_login_rate_limit(self):
+        """测试登录频率限制"""
+        for _ in range(5):
+            response = self.client.post('/api/admin/login',
+                json={'username': 'testuser', 'password': 'wrongpass'})
+            self.assertEqual(response.status_code, 429)
     
     def test_failed_login_user_lock(self):
         """测试用户多次登录失败导致账户锁定"""

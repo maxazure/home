@@ -225,14 +225,14 @@ def get_category_links(id):
     return jsonify(links_schema.dump(category.links))
 
 # 管理员认证相关路由
-@app.route('/admin/login', methods=['GET'])
-def admin_login_page():
+@app.route('/api/admin/login', methods=['GET'])
+def login():
     if current_user.is_authenticated:
-        return redirect(url_for('admin_dashboard'))
-    return app.send_static_file('admin/login.html')
+        return redirect('/admin')
+    return send_from_directory('www', 'admin/login.html')
 
-@app.route('/admin/login', methods=['POST'])
-def admin_login():
+@app.route('/api/admin/login', methods=['POST'])
+def handle_login():
     data = request.json
     ip_address = request.remote_addr
     
@@ -288,11 +288,11 @@ def admin_login():
         'message': '用户名或密码错误'
     }), 401
 
-@app.route('/admin/logout')
+@app.route('/api/admin/logout')
 @login_required
-def admin_logout():
+def logout():
     logout_user()
-    return redirect(url_for('admin_login_page'))
+    return redirect('/admin/login')
 
 @app.route('/admin')
 @login_required
