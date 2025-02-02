@@ -4,6 +4,7 @@ from flask_marshmallow import Marshmallow
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
+from datetime import timedelta
 import os
 
 app = Flask(__name__, static_folder='www', static_url_path='')
@@ -13,6 +14,9 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:////' + os.path.join(basedir, 'instance/links.db'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key'  # 请更改为随机的密钥
+
+# 配置 session
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # session 过期时间设为 30 天
 
 # 初始化扩展
 db = SQLAlchemy(app)
@@ -232,61 +236,24 @@ def login():
     return send_from_directory('www', 'admin/login.html')
 
 @app.route('/api/admin/login', methods=['POST'])
-def handle_login():
-    data = request.json
-    ip_address = request.remote_addr
+def admin_login():
+    if not request.is_json:
+        return jsonify({'message': '请求格式错误'}), 400
+        
+    username = request.json.get('username')
+    password = request.json.get('password')
+    remember = request.json.get('remember', True)  # 默认开启记住我
     
-    # 检查 IP 是否被封禁
-    ip_block = IPBlock.query.filter_by(ip_address=ip_address).first()
-    if ip_block and ip_block.is_blocked:
-        return jsonify({
-            'success': False, 
-            'message': '由于多次登录失败，此IP已被封禁，请联系管理员解封'
-        }), 403
-    
-    user = User.query.filter_by(username=data.get('username')).first()
-    
-    # 检查用户是否存在且未被锁定
-    if user and user.is_locked:
-        return jsonify({
-            'success': False,
-            'message': '账户已被锁定，请联系管理员解锁'
-        }), 403
-    
-    # 验证用户名和密码
-    if user and user.check_password(data.get('password')):
-        # 登录成功，重置失败计数
-        if ip_block:
-            ip_block.failed_attempts = 0
-            ip_block.is_blocked = False
-            db.session.commit()
-        user.reset_failed_attempts()
-        login_user(user)
+    if not username or not password:
+        return jsonify({'message': '用户名和密码不能为空'}), 400
+        
+    user = User.query.filter_by(username=username).first()
+    if user and not user.is_locked and user.check_password(password):
+        login_user(user, remember=remember)  # 使用记住我功能
+        session.permanent = True  # 设置 session 为永久性
         return jsonify({'success': True})
     
-    # 登录失败，增加失败计数
-    if ip_block:
-        ip_block.failed_attempts += 1
-        ip_block.last_attempt = db.func.current_timestamp()
-        if ip_block.failed_attempts >= 10:
-            ip_block.is_blocked = True
-    else:
-        ip_block = IPBlock(
-            ip_address=ip_address,
-            failed_attempts=1,
-            last_attempt=db.func.current_timestamp()
-        )
-        db.session.add(ip_block)
-    
-    if user:
-        user.increment_failed_attempts()
-    
-    db.session.commit()
-    
-    return jsonify({
-        'success': False,
-        'message': '用户名或密码错误'
-    }), 401
+    return jsonify({'message': '用户名或密码错误'}), 401
 
 @app.route('/api/admin/logout')
 @login_required
