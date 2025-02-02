@@ -97,7 +97,7 @@ def index():
 @app.errorhandler(404)
 def not_found(e):
     if request.path.startswith('/api/'):
-        return jsonify(error=str(e)), 404
+        return jsonify(error=str(e), path=request.path), 404
     return app.send_static_file('index.html')
 
 # 路由定义
