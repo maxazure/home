@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+
+# 数据库
+*.db.backup
+
+# 日志
+*.log
+
+# Node
+node_modules/
+npm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db 
