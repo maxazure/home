@@ -11,6 +11,10 @@ services:
       - ./migrations:/app/migrations
     environment:
       - FLASK_APP=app.py
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
     command: >
       sh -c "flask db upgrade &&
              flask create-admin &&
