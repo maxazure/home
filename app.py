@@ -68,6 +68,8 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     section_name = db.Column(db.String(100), nullable=False)
+    section_order = db.Column(db.Integer, default=0)  # 区域排序
+    category_order = db.Column(db.Integer, default=0)  # 分类排序
     links = db.relationship('Link', backref='category', lazy=True)
 
 class Link(db.Model):
@@ -126,7 +128,8 @@ def not_found(e):
 # 分类相关接口
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
-    categories = Category.query.all()
+    # 先按区域排序，再按分类排序
+    categories = Category.query.order_by(Category.section_order, Category.category_order).all()
     return jsonify(categories_schema.dump(categories))
 
 @app.route('/api/categories/<id>', methods=['GET'])
@@ -291,7 +294,16 @@ def admin_add_category():
     title = request.json['title']
     section_name = request.json['section_name']
     
-    new_category = Category(title=title, section_name=section_name)
+    # 获取当前区域内最大的排序值
+    max_order = db.session.query(db.func.max(Category.category_order)).filter(
+        Category.section_name == section_name
+    ).scalar() or 0
+    
+    new_category = Category(
+        title=title,
+        section_name=section_name,
+        category_order=max_order + 1
+    )
     db.session.add(new_category)
     db.session.commit()
     
@@ -443,6 +455,202 @@ def admin_unblock_ip(id):
     ip_block.last_attempt = None
     db.session.commit()
     return jsonify({'message': 'IP已解封'})
+
+# 区域管理相关API
+@app.route('/api/admin/sections', methods=['POST'])
+@login_required
+def admin_add_section():
+    new_name = request.json.get('new_name')
+    if not new_name:
+        return jsonify({'message': '区域名称不能为空'}), 400
+    
+    # 检查区域名称是否已存在
+    if Category.query.filter_by(section_name=new_name).first():
+        return jsonify({'message': '区域名称已存在'}), 400
+    
+    # 获取当前最大排序值
+    max_order = db.session.query(db.func.max(Category.section_order)).scalar() or 0
+    
+    # 创建一个空分类来代表新区域
+    category = Category(
+        title='默认分类',
+        section_name=new_name,
+        section_order=max_order + 1
+    )
+    db.session.add(category)
+    db.session.commit()
+    
+    return jsonify({'message': '区域添加成功'})
+
+@app.route('/api/admin/sections', methods=['PUT'])
+@login_required
+def admin_update_section():
+    new_name = request.json.get('new_name')
+    old_name = request.json.get('old_name')
+    
+    if not new_name or not old_name:
+        return jsonify({'message': '区域名称不能为空'}), 400
+    
+    if new_name != old_name and Category.query.filter_by(section_name=new_name).first():
+        return jsonify({'message': '新区域名称已存在'}), 400
+    
+    # 更新所有相关分类的区域名称
+    categories = Category.query.filter_by(section_name=old_name).all()
+    for category in categories:
+        category.section_name = new_name
+    
+    db.session.commit()
+    return jsonify({'message': '区域更新成功'})
+
+@app.route('/api/admin/sections/reorder', methods=['POST'])
+@login_required
+def admin_reorder_section():
+    section_name = request.json.get('section_name')
+    direction = request.json.get('direction')
+    
+    if not section_name or not direction:
+        return jsonify({'message': '参数不完整'}), 400
+    
+    # 获取当前区域的所有分类
+    current_categories = Category.query.filter_by(section_name=section_name).all()
+    if not current_categories:
+        return jsonify({'message': '区域不存在'}), 404
+    
+    current_order = current_categories[0].section_order
+    
+    if direction == 'up':
+        # 获取上一个区域
+        prev_category = Category.query.filter(
+            Category.section_order < current_order
+        ).order_by(Category.section_order.desc()).first()
+        
+        if prev_category:
+            # 交换排序值
+            prev_order = prev_category.section_order
+            prev_section_name = prev_category.section_name
+            
+            # 更新所有相关分类的排序值
+            Category.query.filter_by(section_name=prev_section_name).update(
+                {'section_order': current_order}
+            )
+            Category.query.filter_by(section_name=section_name).update(
+                {'section_order': prev_order}
+            )
+            
+            db.session.commit()
+    
+    elif direction == 'down':
+        # 获取下一个区域
+        next_category = Category.query.filter(
+            Category.section_order > current_order
+        ).order_by(Category.section_order).first()
+        
+        if next_category:
+            # 交换排序值
+            next_order = next_category.section_order
+            next_section_name = next_category.section_name
+            
+            # 更新所有相关分类的排序值
+            Category.query.filter_by(section_name=next_section_name).update(
+                {'section_order': current_order}
+            )
+            Category.query.filter_by(section_name=section_name).update(
+                {'section_order': next_order}
+            )
+            
+            db.session.commit()
+    
+    return jsonify({'message': '排序更新成功'})
+
+@app.route('/api/admin/categories/reorder', methods=['POST'])
+@login_required
+def admin_reorder_category():
+    source_id = request.json.get('source_id')
+    target_id = request.json.get('target_id')
+    
+    if not source_id or not target_id:
+        return jsonify({'message': '参数不完整'}), 400
+    
+    source = Category.query.get(source_id)
+    target = Category.query.get(target_id)
+    
+    if not source or not target:
+        return jsonify({'message': '分类不存在'}), 404
+    
+    # 确保在同一区域内排序
+    if source.section_name != target.section_name:
+        return jsonify({'message': '只能在同一区域内排序'}), 400
+    
+    # 获取排序值
+    source_order = source.category_order
+    target_order = target.category_order
+    
+    if source_order < target_order:
+        # 向下移动
+        Category.query.filter(
+            Category.section_name == source.section_name,
+            Category.category_order > source_order,
+            Category.category_order <= target_order
+        ).update({
+            Category.category_order: Category.category_order - 1
+        })
+        source.category_order = target_order
+    else:
+        # 向上移动
+        Category.query.filter(
+            Category.section_name == source.section_name,
+            Category.category_order < source_order,
+            Category.category_order >= target_order
+        ).update({
+            Category.category_order: Category.category_order + 1
+        })
+        source.category_order = target_order
+    
+    db.session.commit()
+    return jsonify({'message': '排序更新成功'})
+
+@app.route('/api/admin/categories/move', methods=['POST'])
+@login_required
+def admin_move_category():
+    category_id = request.json.get('category_id')
+    direction = request.json.get('direction')
+    
+    if not category_id or not direction:
+        return jsonify({'message': '参数不完整'}), 400
+    
+    category = Category.query.get(category_id)
+    if not category:
+        return jsonify({'message': '分类不存在'}), 404
+    
+    if direction == 'up':
+        # 获取同一区域中的上一个分类
+        prev_category = Category.query.filter(
+            Category.section_name == category.section_name,
+            Category.category_order < category.category_order
+        ).order_by(Category.category_order.desc()).first()
+        
+        if prev_category:
+            # 交换排序值
+            prev_order = prev_category.category_order
+            prev_category.category_order = category.category_order
+            category.category_order = prev_order
+            db.session.commit()
+    
+    elif direction == 'down':
+        # 获取同一区域中的下一个分类
+        next_category = Category.query.filter(
+            Category.section_name == category.section_name,
+            Category.category_order > category.category_order
+        ).order_by(Category.category_order).first()
+        
+        if next_category:
+            # 交换排序值
+            next_order = next_category.category_order
+            next_category.category_order = category.category_order
+            category.category_order = next_order
+            db.session.commit()
+    
+    return jsonify({'message': '移动成功'})
 
 # 修改初始化数据库命令
 @app.cli.command('init-db')

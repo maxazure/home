@@ -1,7 +1,13 @@
-from app import app, db, Category, Link
+from app import app, db, Category, Link, User
 import json
 import sys
 from urllib.parse import urlparse
+from werkzeug.security import generate_password_hash, check_password_hash
+import hashlib
+
+def hash_password(password):
+    """使用 sha256 哈希密码"""
+    return hashlib.sha256(password.encode()).hexdigest()
 
 def validate_url(url):
     """验证URL是否有效"""
@@ -47,6 +53,35 @@ def validate_data(data):
                         raise ValueError("link必须包含name和url字段")
                     if not validate_url(link['url']):
                         raise ValueError(f"无效的URL: {link['url']}")
+
+def verify_admin_login():
+    """验证 admin 用户登录"""
+    try:
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+            print("错误：未找到 admin 用户")
+            return False
+            
+        # 验证密码是否正确
+        test_password = 'admin'
+        if not admin.check_password(test_password):  # 使用 check_password 方法验证密码
+            print("错误：admin 密码设置不正确")
+            return False
+            
+        # 验证用户状态
+        if admin.is_locked:
+            print("错误：admin 用户仍处于锁定状态")
+            return False
+            
+        if admin.failed_login_attempts != 0:
+            print("错误：admin 用户失败尝试次数未重置")
+            return False
+            
+        print("验证成功：admin 用户可以正常登录")
+        return True
+    except Exception as e:
+        print(f"验证 admin 用户时发生错误: {e}")
+        return False
 
 def import_data(filename=None):
     """导入数据
@@ -107,28 +142,25 @@ def import_data(filename=None):
                                     {
                                         "title": "游戏网站",
                                         "links": [
-                                            {"name": "POKI", "url": "https://poki.com/zh"},
-                                            {"name": "7k7k小游戏", "url": "http://www.7k7k.com/"}
+                                            {"name": "Steam", "url": "https://store.steampowered.com/"},
+                                            {"name": "Epic Games", "url": "https://www.epicgames.com/"},
+                                            {"name": "GOG", "url": "https://www.gog.com/"}
                                         ]
                                     },
                                     {
                                         "title": "设计",
                                         "links": [
-                                            {"name": "CANVA AI作图工具", "url": "https://www.canva.com/"},
-                                            {"name": "Figma 原型设计工具", "url": "https://www.figma.com/"}
+                                            {"name": "Figma", "url": "https://www.figma.com/"},
+                                            {"name": "Dribbble", "url": "https://dribbble.com/"},
+                                            {"name": "Behance", "url": "https://www.behance.net/"}
                                         ]
                                     },
                                     {
                                         "title": "3D打印模型",
                                         "links": [
-                                            {"name": "Thingiverse", "url": "https://www.thingiverse.com"},
-                                            {"name": "Printables", "url": "https://www.printables.com"},
-                                            {"name": "MyMiniFactory", "url": "https://www.myminifactory.com"},
-                                            {"name": "Cults", "url": "https://cults3d.com"},
-                                            {"name": "Pinshape", "url": "https://www.pinshape.com"},
-                                            {"name": "CGTrader", "url": "https://www.cgtrader.com"},
-                                            {"name": "GrabCAD", "url": "https://grabcad.com"},
-                                            {"name": "TurboSquid", "url": "https://www.turbosquid.com"}
+                                            {"name": "Thingiverse", "url": "https://www.thingiverse.com/"},
+                                            {"name": "Printables", "url": "https://www.printables.com/"},
+                                            {"name": "MyMiniFactory", "url": "https://www.myminifactory.com/"}
                                         ]
                                     }
                                 ]
@@ -143,17 +175,17 @@ def import_data(filename=None):
                                     {
                                         "title": "工作常用",
                                         "links": [
-                                            {"name": "1stdomains", "url": "https://1stdomains.nz/"},
-                                            {"name": "Microsoft Teams", "url": "https://www.microsoft.com/en/microsoft-teams/group-chat-software"},
-                                            {"name": "Aliyun", "url": "https://account.aliyun.com/"},
-                                            {"name": "腾讯云", "url": "https://console.cloud.tencent.com/"}
+                                            {"name": "Jira", "url": "https://www.atlassian.com/software/jira"},
+                                            {"name": "Confluence", "url": "https://www.atlassian.com/software/confluence"},
+                                            {"name": "Slack", "url": "https://slack.com/"}
                                         ]
                                     },
                                     {
                                         "title": "文件共享",
                                         "links": [
-                                            {"name": "Google Drive", "url": "https://drive.google.com"},
-                                            {"name": "Dropbox", "url": "https://www.dropbox.com"}
+                                            {"name": "Google Drive", "url": "https://drive.google.com/"},
+                                            {"name": "Dropbox", "url": "https://www.dropbox.com/"},
+                                            {"name": "OneDrive", "url": "https://onedrive.live.com/"}
                                         ]
                                     }
                                 ]
@@ -165,17 +197,6 @@ def import_data(filename=None):
                         "rows": [
                             {
                                 "columns": [
-                                    {
-                                        "title": "私有云",
-                                        "links": [
-                                            {"name": "Portainer(Docker)", "url": "http://192.168.31.205:9000/"},
-                                            {"name": "PVE", "url": "https://192.168.31.221:8006/"},
-                                            {"name": "Baota", "url": "https://192.168.31.205:12006/jayliu"},
-                                            {"name": "Teamcity", "url": "https://teamcity.jayliu.co.nz/"},
-                                            {"name": "Home Assistant", "url": "http://192.168.31.198:8123/"},
-                                            {"name": "家庭相册", "url": "http://192.168.31.143:9989/"}
-                                        ]
-                                    },
                                     {
                                         "title": "共享文件夹",
                                         "links": [
@@ -204,13 +225,19 @@ def import_data(filename=None):
                 print(f"数据验证失败: {e}")
                 return
             
-            # 备份现有数据（如果需要的话）
+            # 备份现有数据
             try:
                 existing_categories = Category.query.all()
                 existing_links = Link.query.all()
                 backup_data = {
                     'categories': [
-                        {'id': c.id, 'title': c.title, 'section_name': c.section_name}
+                        {
+                            'id': c.id, 
+                            'title': c.title, 
+                            'section_name': c.section_name,
+                            'section_order': c.section_order,
+                            'category_order': c.category_order
+                        }
                         for c in existing_categories
                     ],
                     'links': [
@@ -236,14 +263,19 @@ def import_data(filename=None):
             
             # 导入新数据
             try:
-                for section in data:
+                # 记录每个区域的顺序
+                for section_index, section in enumerate(data, 1):
                     section_name = section['sectionName']
+                    category_order = 1  # 每个区域内的分类顺序从1开始
+                    
                     for row in section['rows']:
                         for column in row['columns']:
                             # 创建分类
                             category = Category(
                                 title=column['title'],
-                                section_name=section_name
+                                section_name=section_name,
+                                section_order=section_index,  # 区域顺序
+                                category_order=category_order  # 分类顺序
                             )
                             db.session.add(category)
                             db.session.commit()
@@ -257,9 +289,34 @@ def import_data(filename=None):
                                 )
                                 db.session.add(link)
                             db.session.commit()
+                            
+                            category_order += 1  # 增加分类顺序
+                
+                # 重置 admin 用户状态
+                admin = User.query.filter_by(username='admin').first()
+                if admin:
+                    admin.set_password('admin')  # 使用 set_password 方法重置密码
+                    admin.is_locked = False  # 解除锁定状态
+                    admin.failed_login_attempts = 0  # 重置失败尝试次数
+                    admin.last_failed_login = None  # 清除最后失败时间
+                    db.session.commit()
+                    print("Admin用户状态已重置！")
+                else:
+                    # 创建新的 admin 用户
+                    new_admin = User(username='admin')
+                    new_admin.set_password('admin')  # 使用 set_password 方法设置密码
+                    new_admin.is_locked = False
+                    new_admin.failed_login_attempts = 0
+                    new_admin.last_failed_login = None
+                    db.session.add(new_admin)
+                    db.session.commit()
+                    print("已创建新的 admin 用户！")
+                
+                # 验证 admin 用户登录
+                if not verify_admin_login():
+                    raise Exception("Admin用户验证失败")
                 
                 print("数据导入完成！")
-                
             except Exception as e:
                 print(f"导入数据失败: {e}")
                 db.session.rollback()
@@ -269,7 +326,9 @@ def import_data(filename=None):
                         c = Category(
                             id=category['id'],
                             title=category['title'],
-                            section_name=category['section_name']
+                            section_name=category['section_name'],
+                            section_order=category['section_order'],
+                            category_order=category['category_order']
                         )
                         db.session.add(c)
                     db.session.commit()

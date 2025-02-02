@@ -5,11 +5,13 @@
 ## 功能特点
 
 - 🚀 清爽简洁的导航界面
-- 📂 支持多级分类管理
+- 📂 支持区域和分类两级管理
 - 🔗 链接卡片式展示
 - 🛠 完整的后台管理系统
 - 🔐 用户认证和权限控制
 - 💻 响应式设计，支持移动端访问
+- 📱 支持区域和分类的拖拽排序
+- 🔄 支持数据导入导出
 
 ## 技术栈
 
@@ -18,6 +20,7 @@
 - 数据库: SQLite
 - 认证: Flask-Login
 - CSS工具: PostCSS
+- 排序: Sortable.js
 
 ## 目录结构
 
@@ -28,24 +31,39 @@
 ├── requirements.txt    # Python依赖
 ├── Dockerfile          # Docker 构建文件
 ├── docker-compose.yml  # Docker 编排配置
+├── migrations/         # 数据库迁移文件
+├── instance/          # 实例配置和数据
 ├── www/               # 前端文件目录
 │   ├── css/          # 编译后的CSS
 │   ├── src/          # 源CSS文件
+│   ├── js/           # JavaScript文件
 │   └── admin/        # 后台管理界面
 └── README.md         # 项目说明
 ```
 
 ## 功能模块
 
-- 前台导航
-  - 分类展示
-  - 链接卡片
-  - 响应式布局
-- 后台管理
-  - 分类管理
-  - 链接管理
-  - 用户管理
-  - 权限控制
+### 前台导航
+- 分区展示：支持多个区域（如常用网址、学习、家庭等）
+- 分类管理：每个区域下可包含多个分类
+- 链接卡片：美观的卡片式布局
+- 响应式设计：完美支持移动端访问
+
+### 后台管理
+- 区域管理
+  - 添加/编辑/删除区域
+  - 区域排序
+- 分类管理
+  - 添加/编辑/删除分类
+  - 分类排序
+  - 分类归属区域设置
+- 链接管理
+  - 添加/编辑/删除链接
+  - 链接分类设置
+- 用户管理
+  - 用户认证
+  - 登录保护
+  - 失败次数限制
 
 ## 部署方式
 
@@ -95,23 +113,6 @@ server {
 }
 ```
 
-#### 维护命令
-
-```bash
-# 查看容器状态
-docker-compose ps
-
-# 查看应用日志
-docker-compose logs -f web
-
-# 重启应用
-docker-compose restart
-
-# 更新应用
-git pull
-docker-compose up -d --build
-```
-
 ### 2. 传统部署
 
 1. 安装 Python 依赖
@@ -121,8 +122,7 @@ pip install -r requirements.txt
 
 2. 初始化数据库
 ```bash
-flask init-db
-flask create-admin  # 创建管理员账号
+flask db upgrade  # 执行数据库迁移
 python import_data.py  # 导入初始数据
 ```
 
@@ -139,15 +139,36 @@ flask run
 ## 使用说明
 
 1. 访问首页: `http://localhost:5000`
-2. 访问管理后台: `http://localhost:5000/admin/login`
+2. 访问管理后台: `http://localhost:5000/admin`
    - 默认管理员账号: admin
-   - 默认密码: admin123
+   - 默认密码: admin
+
+### 后台功能说明
+
+1. 区域管理
+   - 点击"添加区域"按钮创建新区域
+   - 使用拖拽功能调整区域顺序
+   - 点击编辑按钮修改区域名称
+
+2. 分类管理
+   - 在对应区域下添加新分类
+   - 使用拖拽功能调整分类顺序
+   - 编辑分类信息时可更改所属区域
+
+3. 链接管理
+   - 在分类下添加新链接
+   - 支持批量导入链接
+   - 可以移动链接到其他分类
 
 ## 数据备份
-数据库文件位于项目根目录的 `links.db`，建议定期备份：
+
+### 自动备份
+系统在进行数据导入时会自动创建备份文件 `data_backup.json`
+
+### 手动备份
 ```bash
 # 备份数据库
-cp links.db links.db.backup
+cp instance/links.db instance/links.db.backup
 ```
 
 ## 系统要求
@@ -156,14 +177,22 @@ cp links.db links.db.backup
 
 ## 开发说明
 
-- CSS修改后需要重新编译：
+### CSS 修改
+修改 CSS 后需要重新编译：
 ```bash
 cd www && npx tailwindcss -i ./src/style.css -o ./css/style.css
 ```
 
+### 数据库迁移
+添加新的数据库字段后需要创建迁移：
+```bash
+flask db migrate -m "迁移说明"
+flask db upgrade
+```
+
 ## 贡献指南
 
-欢迎提交Issue和Pull Request来帮助改进项目。
+欢迎提交 Issue 和 Pull Request 来帮助改进项目。
 
 ## 许可证
 

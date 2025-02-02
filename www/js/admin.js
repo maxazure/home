@@ -38,116 +38,249 @@ async function loadCategories() {
         const response = await fetch('/api/categories');
         const categories = await response.json();
         
-        const tbody = document.getElementById('categories-table-body');
-        tbody.innerHTML = categories.map(category => `
-            <tr>
-                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900">${category.id}</td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">${category.title}</td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">${category.section_name}</td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                    <button onclick="editCategory(${category.id}, '${category.title}', '${category.section_name}')"
-                            class="text-primary-600 hover:text-primary-900 mr-3">编辑</button>
-                    <button onclick="deleteCategory(${category.id})"
-                            class="text-red-600 hover:text-red-900">删除</button>
-                </td>
-            </tr>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading categories:', error);
-    }
-}
-
-// 加载链接列表
-async function loadLinks() {
-    try {
-        const [categoriesResponse, linksResponse] = await Promise.all([
-            fetch('/api/categories'),
-            fetch('/api/links')
-        ]);
-        
-        const categories = await categoriesResponse.json();
-        const links = await linksResponse.json();
-        
-        // 按分类组织链接
-        const linksByCategory = {};
-        links.forEach(link => {
-            if (!linksByCategory[link.category_id]) {
-                linksByCategory[link.category_id] = [];
+        // 按区域分组
+        const sectionGroups = {};
+        categories.forEach(category => {
+            if (!sectionGroups[category.section_name]) {
+                sectionGroups[category.section_name] = [];
             }
-            linksByCategory[link.category_id].push(link);
+            sectionGroups[category.section_name].push(category);
         });
         
-        const container = document.getElementById('links-container');
-        container.innerHTML = categories.map(category => `
-            <div class="bg-white shadow rounded-lg overflow-hidden">
+        const container = document.getElementById('categories-section');
+        const content = document.createElement('div');
+        content.className = 'space-y-6';
+        
+        // 添加新区域的按钮
+        content.innerHTML = `
+            <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-900">分类管理</h2>
+                <button onclick="showAddSectionModal()" class="btn btn-primary">添加新区域</button>
+            </div>
+        `;
+        
+        // 渲染每个区域的卡片
+        Object.entries(sectionGroups).forEach(([sectionName, categories]) => {
+            const sectionCard = document.createElement('div');
+            sectionCard.className = 'bg-white shadow rounded-lg overflow-hidden';
+            sectionCard.innerHTML = `
                 <div class="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-gray-200">
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900">${category.title}</h3>
-                        <p class="mt-1 text-sm text-gray-500">${category.section_name}</p>
+                    <div class="flex items-center space-x-4">
+                        <h3 class="text-lg font-medium text-gray-900">${sectionName}</h3>
+                        <button onclick="editSection('${sectionName}')" class="text-sm text-blue-600 hover:text-blue-800">
+                            修改区域名称
+                        </button>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <button onclick="editCategory(${category.id}, '${category.title}', '${category.section_name}')" 
-                                class="btn btn-secondary flex items-center">
-                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                            修改分类
+                        <button onclick="showAddCategoryModal('${sectionName}')" class="btn btn-primary">
+                            添加分类
                         </button>
-                        <button onclick="deleteCategoryWithConfirm(${category.id}, '${category.title}')" 
-                                class="btn btn-danger flex items-center">
-                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        <button onclick="moveSectionUp('${sectionName}')" class="btn btn-secondary">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                             </svg>
-                            删除分类
                         </button>
-                        <button onclick="showAddLinkModal(${category.id})" class="btn btn-primary flex items-center">
-                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M12 4v16m8-8H4"/>
+                        <button onclick="moveSectionDown('${sectionName}')" class="btn btn-secondary">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
-                            添加链接
                         </button>
                     </div>
                 </div>
                 <div class="px-4 py-5 sm:p-6">
-                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        ${(linksByCategory[category.id] || []).map(link => `
-                            <div class="bg-gray-50 rounded-lg p-4 hover:shadow transition-shadow">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex-1">
-                                        <h4 class="text-base font-medium text-gray-900">${link.name}</h4>
-                                        <a href="${link.url}" target="_blank" rel="noopener noreferrer" 
-                                           class="mt-1 text-sm text-primary-600 hover:text-primary-900 break-all">
-                                            ${link.url}
-                                        </a>
-                                    </div>
-                                    <div class="ml-4 flex-shrink-0">
-                                        <button onclick="editLink(${link.id}, '${link.name}', '${link.url}', ${link.category_id})"
-                                                class="text-primary-600 hover:text-primary-900">
-                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                            </svg>
-                                        </button>
-                                        <button onclick="deleteLink(${link.id})"
-                                                class="ml-2 text-red-600 hover:text-red-900">
-                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
-                                        </button>
-                                    </div>
+                    <div class="space-y-4" id="categories-${sectionName.replace(/\s+/g, '-')}">
+                        ${categories.map((category, index) => `
+                            <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg" 
+                                 draggable="true" 
+                                 ondragstart="dragStart(event, ${category.id})"
+                                 ondragend="dragEnd(event)"
+                                 ondragover="dragOver(event)"
+                                 ondragleave="dragLeave(event)"
+                                 ondrop="drop(event, ${category.id})"
+                                 data-category-id="${category.id}">
+                                <div class="flex-1">
+                                    <h4 class="text-base font-medium text-gray-900">${category.title}</h4>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="editCategory(${category.id}, '${category.title}', '${category.section_name}')"
+                                            class="text-blue-600 hover:text-blue-800">编辑</button>
+                                    <button onclick="deleteCategory(${category.id})"
+                                            class="text-red-600 hover:text-red-900">删除</button>
+                                    <button onclick="moveCategoryUp(${category.id})" class="text-gray-600 hover:text-gray-800">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    </button>
+                                    <button onclick="moveCategoryDown(${category.id})" class="text-gray-600 hover:text-gray-800">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+            content.appendChild(sectionCard);
+        });
+        
+        // 清空并添加新内容
+        const oldContent = container.querySelector('.space-y-6');
+        if (oldContent) {
+            container.removeChild(oldContent);
+        }
+        container.appendChild(content);
     } catch (error) {
-        console.error('Error loading links:', error);
+        console.error('Error loading categories:', error);
+    }
+}
+
+// 拖拽相关函数
+function dragStart(event, categoryId) {
+    event.dataTransfer.setData('text/plain', categoryId);
+    const draggedElement = event.target;
+    draggedElement.classList.add('opacity-50');
+}
+
+function dragEnd(event) {
+    event.target.classList.remove('opacity-50');
+}
+
+function dragOver(event) {
+    event.preventDefault();
+    const dropZone = event.target.closest('[data-category-id]');
+    if (dropZone) {
+        dropZone.classList.add('bg-gray-100');
+    }
+}
+
+function dragLeave(event) {
+    const dropZone = event.target.closest('[data-category-id]');
+    if (dropZone) {
+        dropZone.classList.remove('bg-gray-100');
+    }
+}
+
+function drop(event, targetCategoryId) {
+    event.preventDefault();
+    const dropZone = event.target.closest('[data-category-id]');
+    if (dropZone) {
+        dropZone.classList.remove('bg-gray-100');
+    }
+    
+    const sourceCategoryId = event.dataTransfer.getData('text/plain');
+    if (sourceCategoryId !== targetCategoryId.toString()) {
+        reorderCategories(parseInt(sourceCategoryId), targetCategoryId);
+    }
+}
+
+// 重新排序分类
+async function reorderCategories(sourceCategoryId, targetCategoryId) {
+    try {
+        const response = await fetch('/api/admin/categories/reorder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                source_id: sourceCategoryId,
+                target_id: targetCategoryId
+            }),
+        });
+        
+        if (response.ok) {
+            await loadCategories();
+        } else {
+            const error = await response.json();
+            alert(error.message || '重新排序失败');
+        }
+    } catch (error) {
+        console.error('Error reordering categories:', error);
+        alert('重新排序失败，请重试');
+    }
+}
+
+// 显示添加区域模态框
+function showAddSectionModal() {
+    document.getElementById('section-modal-title').textContent = '添加新区域';
+    document.getElementById('section-name-input').value = '';
+    document.getElementById('section-modal').classList.remove('hidden');
+}
+
+// 编辑区域名称
+function editSection(sectionName) {
+    document.getElementById('section-modal-title').textContent = '修改区域名称';
+    document.getElementById('section-name-input').value = sectionName;
+    document.getElementById('old-section-name').value = sectionName;
+    document.getElementById('section-modal').classList.remove('hidden');
+}
+
+// 移动区域位置
+async function moveSectionUp(sectionName) {
+    await moveSection(sectionName, 'up');
+}
+
+async function moveSectionDown(sectionName) {
+    await moveSection(sectionName, 'down');
+}
+
+async function moveSection(sectionName, direction) {
+    try {
+        const response = await fetch('/api/admin/sections/reorder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                section_name: sectionName,
+                direction: direction
+            }),
+        });
+        
+        if (response.ok) {
+            await loadCategories();
+        } else {
+            const error = await response.json();
+            alert(error.message || '移动失败');
+        }
+    } catch (error) {
+        console.error('Error moving section:', error);
+        alert('移动失败，请重试');
+    }
+}
+
+// 移动分类位置
+async function moveCategoryUp(categoryId) {
+    await moveCategory(categoryId, 'up');
+}
+
+async function moveCategoryDown(categoryId) {
+    await moveCategory(categoryId, 'down');
+}
+
+async function moveCategory(categoryId, direction) {
+    try {
+        const response = await fetch('/api/admin/categories/move', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                category_id: categoryId,
+                direction: direction
+            }),
+        });
+        
+        if (response.ok) {
+            await loadCategories();
+        } else {
+            const error = await response.json();
+            alert(error.message || '移动失败');
+        }
+    } catch (error) {
+        console.error('Error moving category:', error);
+        alert('移动失败，请重试');
     }
 }
 
@@ -166,12 +299,33 @@ async function loadCategoriesForSelect() {
     }
 }
 
+// 加载区域下拉框
+async function loadSectionsForSelect() {
+    try {
+        const response = await fetch('/api/categories');
+        const categories = await response.json();
+        
+        // 获取唯一的区域名称
+        const sections = [...new Set(categories.map(c => c.section_name))];
+        
+        const select = document.getElementById('section-name');
+        select.innerHTML = sections.map(section =>
+            `<option value="${section}">${section}</option>`
+        ).join('');
+    } catch (error) {
+        console.error('Error loading sections for select:', error);
+    }
+}
+
 // 显示添加分类模态框
-function showAddCategoryModal() {
+function showAddCategoryModal(sectionName = null) {
     currentCategoryId = null;
     document.getElementById('category-modal-title').textContent = '添加分类';
     document.getElementById('category-title').value = '';
-    document.getElementById('section-name').value = '';
+    if (sectionName) {
+        document.getElementById('section-name').value = sectionName;
+    }
+    loadSectionsForSelect();
     document.getElementById('category-modal').classList.remove('hidden');
 }
 
@@ -180,7 +334,9 @@ function editCategory(id, title, sectionName) {
     currentCategoryId = id;
     document.getElementById('category-modal-title').textContent = '编辑分类';
     document.getElementById('category-title').value = title;
-    document.getElementById('section-name').value = sectionName;
+    loadSectionsForSelect().then(() => {
+        document.getElementById('section-name').value = sectionName;
+    });
     document.getElementById('category-modal').classList.remove('hidden');
 }
 
@@ -451,4 +607,54 @@ async function deleteCategoryWithConfirm(id, title) {
         console.error('Error deleting category:', error);
         alert('删除失败，请重试');
     }
-} 
+}
+
+function updateUserSection(data) {
+    const userSection = document.getElementById('userSection');
+    if (data.authenticated) {
+        userSection.innerHTML = `
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-700">${data.username}</span>
+                <a href="/" class="text-blue-600 hover:text-blue-800">查看首页</a>
+                <a href="/admin" class="text-blue-600 hover:text-blue-800">进入后台</a>
+                <button onclick="logout()" class="text-red-600 hover:text-red-800">退出</button>
+            </div>
+        `;
+    } else {
+        userSection.innerHTML = `
+            <a href="/admin/login.html" class="text-blue-600 hover:text-blue-800">登录</a>
+        `;
+    }
+}
+
+// 处理区域表单提交
+document.getElementById('section-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const newSectionName = document.getElementById('section-name-input').value;
+    const oldSectionName = document.getElementById('old-section-name').value;
+    
+    try {
+        const response = await fetch('/api/admin/sections', {
+            method: oldSectionName ? 'PUT' : 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                new_name: newSectionName,
+                old_name: oldSectionName
+            }),
+        });
+        
+        if (response.ok) {
+            closeModal('section-modal');
+            await loadCategories();
+        } else {
+            const error = await response.json();
+            alert(error.message || '操作失败');
+        }
+    } catch (error) {
+        console.error('Error saving section:', error);
+        alert('保存失败，请重试');
+    }
+}); 

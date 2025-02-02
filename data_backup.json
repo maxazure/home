@@ -1,0 +1,335 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "title": "必备网站 1",
+      "section_name": "常用网址",
+      "section_order": null,
+      "category_order": null
+    },
+    {
+      "id": 2,
+      "title": "编程",
+      "section_name": "常用网址",
+      "section_order": null,
+      "category_order": null
+    },
+    {
+      "id": 3,
+      "title": "生活与购物",
+      "section_name": "常用网址",
+      "section_order": null,
+      "category_order": null
+    },
+    {
+      "id": 4,
+      "title": "游戏网站",
+      "section_name": "常用网址",
+      "section_order": null,
+      "category_order": null
+    },
+    {
+      "id": 5,
+      "title": "设计",
+      "section_name": "常用网址",
+      "section_order": null,
+      "category_order": null
+    },
+    {
+      "id": 6,
+      "title": "3D打印模型",
+      "section_name": "常用网址",
+      "section_order": null,
+      "category_order": null
+    },
+    {
+      "id": 7,
+      "title": "工作常用",
+      "section_name": "学习",
+      "section_order": null,
+      "category_order": null
+    },
+    {
+      "id": 8,
+      "title": "文件共享",
+      "section_name": "学习",
+      "section_order": null,
+      "category_order": null
+    },
+    {
+      "id": 9,
+      "title": "私有云",
+      "section_name": "家庭",
+      "section_order": null,
+      "category_order": null
+    },
+    {
+      "id": 10,
+      "title": "共享文件夹",
+      "section_name": "家庭",
+      "section_order": null,
+      "category_order": null
+    },
+    {
+      "id": 11,
+      "title": "PROJECTS",
+      "section_name": "家庭",
+      "section_order": null,
+      "category_order": null
+    }
+  ],
+  "links": [
+    {
+      "id": 1,
+      "name": "Google",
+      "url": "https://www.google.com",
+      "category_id": 1
+    },
+    {
+      "id": 2,
+      "name": "ChatGPT",
+      "url": "https://chat.openai.com",
+      "category_id": 1
+    },
+    {
+      "id": 3,
+      "name": "Youtube",
+      "url": "https://www.youtube.com",
+      "category_id": 1
+    },
+    {
+      "id": 4,
+      "name": "哔哩哔哩",
+      "url": "https://www.bilibili.com",
+      "category_id": 1
+    },
+    {
+      "id": 5,
+      "name": "Stack Overflow",
+      "url": "https://stackoverflow.com",
+      "category_id": 2
+    },
+    {
+      "id": 6,
+      "name": "GitHub",
+      "url": "https://github.com",
+      "category_id": 2
+    },
+    {
+      "id": 7,
+      "name": "uviewui",
+      "url": "https://www.uviewui.com/",
+      "category_id": 2
+    },
+    {
+      "id": 8,
+      "name": "CoreShop",
+      "url": "https://www.coreshop.cn/",
+      "category_id": 2
+    },
+    {
+      "id": 9,
+      "name": "新西兰比价网（PriceSpy）",
+      "url": "https://www.pricespy.co.nz/",
+      "category_id": 3
+    },
+    {
+      "id": 10,
+      "name": "Bunnings",
+      "url": "https://www.bunnings.co.nz/",
+      "category_id": 3
+    },
+    {
+      "id": 11,
+      "name": "The Warehouse",
+      "url": "https://www.thewarehouse.co.nz/",
+      "category_id": 3
+    },
+    {
+      "id": 12,
+      "name": "Trade Me",
+      "url": "https://www.trademe.co.nz/",
+      "category_id": 3
+    },
+    {
+      "id": 13,
+      "name": "Kmart NZ",
+      "url": "https://www.kmart.co.nz/",
+      "category_id": 3
+    },
+    {
+      "id": 14,
+      "name": "POKI",
+      "url": "https://poki.com/zh",
+      "category_id": 4
+    },
+    {
+      "id": 15,
+      "name": "7k7k小游戏",
+      "url": "http://www.7k7k.com/",
+      "category_id": 4
+    },
+    {
+      "id": 16,
+      "name": "CANVA AI作图工具",
+      "url": "https://www.canva.com/",
+      "category_id": 5
+    },
+    {
+      "id": 17,
+      "name": "Figma 原型设计工具",
+      "url": "https://www.figma.com/",
+      "category_id": 5
+    },
+    {
+      "id": 18,
+      "name": "Thingiverse",
+      "url": "https://www.thingiverse.com",
+      "category_id": 6
+    },
+    {
+      "id": 19,
+      "name": "Printables",
+      "url": "https://www.printables.com",
+      "category_id": 6
+    },
+    {
+      "id": 20,
+      "name": "MyMiniFactory",
+      "url": "https://www.myminifactory.com",
+      "category_id": 6
+    },
+    {
+      "id": 21,
+      "name": "Cults",
+      "url": "https://cults3d.com",
+      "category_id": 6
+    },
+    {
+      "id": 22,
+      "name": "Pinshape",
+      "url": "https://www.pinshape.com",
+      "category_id": 6
+    },
+    {
+      "id": 23,
+      "name": "CGTrader",
+      "url": "https://www.cgtrader.com",
+      "category_id": 6
+    },
+    {
+      "id": 24,
+      "name": "GrabCAD",
+      "url": "https://grabcad.com",
+      "category_id": 6
+    },
+    {
+      "id": 25,
+      "name": "TurboSquid",
+      "url": "https://www.turbosquid.com",
+      "category_id": 6
+    },
+    {
+      "id": 26,
+      "name": "1stdomains",
+      "url": "https://1stdomains.nz/",
+      "category_id": 7
+    },
+    {
+      "id": 27,
+      "name": "Microsoft Teams",
+      "url": "https://www.microsoft.com/en/microsoft-teams/group-chat-software",
+      "category_id": 7
+    },
+    {
+      "id": 28,
+      "name": "Aliyun",
+      "url": "https://account.aliyun.com/",
+      "category_id": 7
+    },
+    {
+      "id": 29,
+      "name": "腾讯云",
+      "url": "https://console.cloud.tencent.com/",
+      "category_id": 7
+    },
+    {
+      "id": 30,
+      "name": "Google Drive",
+      "url": "https://drive.google.com",
+      "category_id": 8
+    },
+    {
+      "id": 31,
+      "name": "Dropbox",
+      "url": "https://www.dropbox.com",
+      "category_id": 8
+    },
+    {
+      "id": 32,
+      "name": "Portainer(Docker)",
+      "url": "http://192.168.31.205:9000/",
+      "category_id": 9
+    },
+    {
+      "id": 33,
+      "name": "PVE",
+      "url": "https://192.168.31.221:8006/",
+      "category_id": 9
+    },
+    {
+      "id": 34,
+      "name": "Baota",
+      "url": "https://192.168.31.205:12006/jayliu",
+      "category_id": 9
+    },
+    {
+      "id": 35,
+      "name": "Teamcity",
+      "url": "https://teamcity.jayliu.co.nz/",
+      "category_id": 9
+    },
+    {
+      "id": 36,
+      "name": "Home Assistant",
+      "url": "http://192.168.31.198:8123/",
+      "category_id": 9
+    },
+    {
+      "id": 37,
+      "name": "家庭相册",
+      "url": "http://192.168.31.143:9989/",
+      "category_id": 9
+    },
+    {
+      "id": 38,
+      "name": "\\\\192.168.31.205\\data",
+      "url": "",
+      "category_id": 10
+    },
+    {
+      "id": 39,
+      "name": "Apple Music",
+      "url": "https://www.apple.com/apple-music/",
+      "category_id": 10
+    },
+    {
+      "id": 40,
+      "name": "修改Home网址导航",
+      "url": "http://192.168.31.205:8081/?folder=/www/wwwroot/home.jayliu.co.nz",
+      "category_id": 10
+    },
+    {
+      "id": 41,
+      "name": "KTATTOO",
+      "url": "https://www.ktattoo.co.nz",
+      "category_id": 11
+    },
+    {
+      "id": 42,
+      "name": "云想门店",
+      "url": "https://admin.storeyx.com/",
+      "category_id": 11
+    }
+  ]
+}
