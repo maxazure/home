@@ -213,7 +213,14 @@ ssh www@home
 ```bash
 cd /www/wwwroot/home.jayliu.co.nz
 git pull
+
+# 如果只是更新了代码，不需要重新构建镜像
 docker compose down
+docker compose up -d
+
+# 如果修改了 Dockerfile 或需要重新构建镜像
+docker compose down
+docker compose build  # 重新构建镜像
 docker compose up -d
 ```
 
