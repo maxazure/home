@@ -3,6 +3,7 @@ name: home-navigation
 services:
   web:
     build: .
+    user: "1001:1001"
     restart: always
     ports:
       - "5001:5000"
@@ -20,9 +21,7 @@ services:
       sh -c "mkdir -p /app/instance &&
              mkdir -p /app/migrations/versions &&
              touch /app/instance/links.db &&
-             chmod -R 777 /app/instance &&
-             chmod -R 777 /app/migrations &&
-             if [ ! -d "/app/migrations" ] || [ -z "$(ls -A /app/migrations)" ]; then
+             if [ ! -d \"/app/migrations\" ] || [ -z \"$(ls -A /app/migrations)\" ]; then
                  flask db init
              fi &&
              flask db migrate -m 'Initial migration' || true &&
