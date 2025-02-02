@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_migrate import Migrate
 import os
 
 app = Flask(__name__, static_folder='www', static_url_path='')
@@ -18,6 +19,7 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'admin_login'
+migrate = Migrate(app, db)
 
 # 用户模型
 class User(UserMixin, db.Model):
@@ -239,10 +241,17 @@ def admin_update_category(id):
 @app.route('/api/admin/categories/<id>', methods=['DELETE'])
 @login_required
 def admin_delete_category(id):
-    category = Category.query.get_or_404(id)
-    db.session.delete(category)
-    db.session.commit()
-    return jsonify({'message': 'Category deleted successfully'})
+    try:
+        category = Category.query.get_or_404(id)
+        # 先删除该分类下的所有链接
+        Link.query.filter_by(category_id=id).delete()
+        # 再删除分类
+        db.session.delete(category)
+        db.session.commit()
+        return jsonify({'message': 'Category deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'删除失败: {str(e)}'}), 500
 
 @app.route('/api/admin/links', methods=['POST'])
 @login_required
@@ -332,11 +341,27 @@ def admin_delete_user(id):
     db.session.commit()
     return jsonify({'message': 'User deleted successfully'})
 
-# 初始化数据库的命令
+# 修改初始化数据库命令
 @app.cli.command('init-db')
-def init_db():
+def init_db_command():
+    """Clear existing data and create new tables."""
     db.create_all()
-    print('数据库表创建成功')
+    print('数据库表已创建。')
+
+# 添加数据库迁移命令
+@app.cli.command('db-migrate')
+def db_migrate_command():
+    """Run database migrations."""
+    print('正在执行数据库迁移...')
+    os.system('flask db migrate -m "自动迁移"')
+    print('迁移文件已创建。')
+
+@app.cli.command('db-upgrade')
+def db_upgrade_command():
+    """Apply database migrations."""
+    print('正在应用数据库迁移...')
+    os.system('flask db upgrade')
+    print('数据库迁移已完成。')
 
 # 初始化管理员账号的命令
 @app.cli.command('create-admin')

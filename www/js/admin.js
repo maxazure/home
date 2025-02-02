@@ -442,9 +442,10 @@ async function deleteCategoryWithConfirm(id, title) {
         
         if (response.ok) {
             await loadLinks();
+            alert('删除成功！');
         } else {
             const error = await response.json();
-            alert(error.message || '删除失败');
+            alert(error.message || '删除失败，请重试');
         }
     } catch (error) {
         console.error('Error deleting category:', error);
