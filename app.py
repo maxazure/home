@@ -292,7 +292,7 @@ def handle_login():
 @login_required
 def logout():
     logout_user()
-    return redirect('/admin/login')
+    return redirect('/admin/login.html')
 
 @app.route('/admin')
 @login_required
