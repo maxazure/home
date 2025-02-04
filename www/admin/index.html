@@ -27,25 +27,32 @@
             <!-- 左侧菜单 -->
             <div class="w-64 bg-white shadow-lg h-screen">
                 <nav class="mt-5 flex-1 space-y-1 px-2">
-                    <a href="#" onclick="showCategories()" class="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900">
+                    <a href="#" onclick="showCategories()" class="nav-link group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900" data-section="categories">
                         <svg class="mr-4 h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                         </svg>
                         分类管理
                     </a>
 
-                    <a href="#" onclick="showLinks()" class="mt-1 group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900">
+                    <a href="#" onclick="showLinks()" class="nav-link group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900" data-section="links">
                         <svg class="mr-4 h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
                         </svg>
                         链接管理
                     </a>
 
-                    <a href="#" onclick="showUsers()" class="mt-1 group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900">
+                    <a href="#" onclick="showUsers()" class="nav-link group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900" data-section="users">
                         <svg class="mr-4 h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                         </svg>
                         用户管理
+                    </a>
+
+                    <a href="#" onclick="showBackup()" class="nav-link group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900" data-section="backup">
+                        <svg class="mr-4 h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"></path>
+                        </svg>
+                        数据备份
                     </a>
                 </nav>
             </div>
@@ -97,17 +104,57 @@
                             <div class="mt-8 flow-root">
                                 <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                                     <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                                        <table class="min-w-full divide-y divide-gray-300">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">ID</th>
-                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">用户名</th>
-                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">创建时间</th>
-                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">操作</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-gray-200" id="users-table-body"></tbody>
-                                        </table>
+                                        <div class="bg-white shadow rounded-lg overflow-hidden">
+                                            <table class="min-w-full divide-y divide-gray-300">
+                                                <thead class="bg-gray-50">
+                                                    <tr>
+                                                        <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">ID</th>
+                                                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">用户名</th>
+                                                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">创建时间</th>
+                                                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">操作</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-gray-200 bg-white" id="users-table-body"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 数据备份部分 -->
+                        <div id="backup-section" class="hidden">
+                            <div class="px-4 py-5 sm:px-6">
+                                <div class="space-y-4">
+                                    <div class="bg-white shadow sm:rounded-lg">
+                                        <div class="px-4 py-5 sm:p-6">
+                                            <h3 class="text-base font-semibold leading-6 text-gray-900">导出数据备份</h3>
+                                            <div class="mt-2 max-w-xl text-sm text-gray-500">
+                                                <p>导出所有区域、分类和链接数据为JSON文件。</p>
+                                            </div>
+                                            <div class="mt-5">
+                                                <button onclick="exportData()" class="btn btn-primary">
+                                                    导出数据
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white shadow sm:rounded-lg">
+                                        <div class="px-4 py-5 sm:p-6">
+                                            <h3 class="text-base font-semibold leading-6 text-gray-900">恢复数据备份</h3>
+                                            <div class="mt-2 max-w-xl text-sm text-gray-500">
+                                                <p>从JSON文件恢复数据，这将覆盖现有的所有数据。</p>
+                                            </div>
+                                            <form id="import-form" class="mt-5">
+                                                <div class="flex items-center gap-4">
+                                                    <input type="file" id="import-file" accept=".json" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                                                    <button type="submit" class="btn btn-primary">
+                                                        恢复数据
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

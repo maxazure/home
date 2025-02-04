@@ -16,27 +16,45 @@ function updatePageTitle(title) {
 // 显示分类管理页面
 async function showCategories() {
     updatePageTitle('分类管理');
+    // 隐藏所有其他部分
     document.getElementById('categories-section').classList.remove('hidden');
     document.getElementById('links-section').classList.add('hidden');
     document.getElementById('users-section').classList.add('hidden');
+    document.getElementById('backup-section').classList.add('hidden');
+    
+    // 更新菜单活动状态
+    updateActiveMenu('categories');
+    
     await loadCategories();
 }
 
 // 显示链接管理页面
 async function showLinks() {
     updatePageTitle('链接管理');
+    // 隐藏所有其他部分
     document.getElementById('categories-section').classList.add('hidden');
     document.getElementById('links-section').classList.remove('hidden');
     document.getElementById('users-section').classList.add('hidden');
+    document.getElementById('backup-section').classList.add('hidden');
+    
+    // 更新菜单活动状态
+    updateActiveMenu('links');
+    
     await Promise.all([loadLinks(), loadCategoriesForSelect()]);
 }
 
 // 显示用户管理页面
 async function showUsers() {
     updatePageTitle('用户管理');
+    // 隐藏所有其他部分
     document.getElementById('categories-section').classList.add('hidden');
     document.getElementById('links-section').classList.add('hidden');
     document.getElementById('users-section').classList.remove('hidden');
+    document.getElementById('backup-section').classList.add('hidden');
+    
+    // 更新菜单活动状态
+    updateActiveMenu('users');
+    
     await loadUsers();
 }
 
@@ -535,15 +553,17 @@ async function loadUsers() {
         
         const tbody = document.getElementById('users-table-body');
         tbody.innerHTML = users.map(user => `
-            <tr>
-                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900">${user.id}</td>
+            <tr class="hover:bg-gray-50">
+                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">${user.id}</td>
                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">${user.username}</td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">${new Date(user.created_at).toLocaleString()}</td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                    <button onclick="editUser(${user.id}, '${user.username}')"
-                            class="text-primary-600 hover:text-primary-900 mr-3">编辑</button>
-                    <button onclick="deleteUser(${user.id})"
-                            class="text-red-600 hover:text-red-900">删除</button>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">${new Date(user.created_at).toLocaleString()}</td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                    <div class="flex items-center space-x-4">
+                        <button onclick="editUser(${user.id}, '${user.username}')"
+                                class="text-blue-600 hover:text-blue-900">编辑</button>
+                        <button onclick="deleteUser(${user.id})"
+                                class="text-red-600 hover:text-red-900">删除</button>
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -757,36 +777,114 @@ async function loadLinks() {
     }
 }
 
-// 修改删除分类函数
-async function deleteCategoryWithConfirm(id, title) {
-    if (!confirm(`确定要删除分类"${title}"吗？\n注意：该分类下的所有链接都将被删除！`)) {
-        return;
-    }
+// 显示数据备份页面
+function showBackup() {
+    updatePageTitle('数据备份');
+    // 隐藏所有其他部分
+    document.getElementById('categories-section').classList.add('hidden');
+    document.getElementById('links-section').classList.add('hidden');
+    document.getElementById('users-section').classList.add('hidden');
+    document.getElementById('backup-section').classList.remove('hidden');
     
+    // 更新菜单活动状态
+    updateActiveMenu('backup');
+}
+
+// 导出数据
+async function exportData() {
     try {
-        const response = await fetch(`/api/admin/categories/${id}`, {
-            method: 'DELETE',
-        });
-        
-        if (response.ok) {
-            await loadLinks();
-            alert('删除成功！');
-        } else {
+        const response = await fetch('/api/admin/export');
+        if (!response.ok) {
             const error = await response.json();
-            alert(error.message || '删除失败，请重试');
+            throw new Error(error.message || '导出失败');
         }
+        
+        // 获取文件名
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = 'links_backup.json';
+        if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+                filename = matches[1].replace(/['"]/g, '');
+            }
+        }
+        
+        // 下载文件
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
     } catch (error) {
-        console.error('Error deleting category:', error);
-        alert('删除失败，请重试');
+        console.error('Error exporting data:', error);
+        alert(error.message || '导出失败，请重试');
     }
 }
 
-// 修改编辑分类函数
-async function editCategory(categoryId, currentName, sectionName) {
-    currentCategoryId = categoryId;
-    document.getElementById('category-modal-title').textContent = '编辑分类';
-    document.getElementById('category-title').value = currentName;
-    await loadSectionsForSelect();
-    document.getElementById('category-section').value = sectionName;
-    document.getElementById('category-modal').classList.remove('hidden');
+// 初始化导入表单处理
+document.addEventListener('DOMContentLoaded', () => {
+    const importForm = document.getElementById('import-form');
+    if (importForm) {
+        importForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const fileInput = document.getElementById('import-file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('请选择要导入的文件');
+                return;
+            }
+            
+            if (!file.name.endsWith('.json')) {
+                alert('请选择JSON格式的文件');
+                return;
+            }
+            
+            if (!confirm('导入数据将覆盖现有的所有数据，确定要继续吗？')) {
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/admin/import', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.message || '导入失败');
+                }
+                
+                alert('数据导入成功');
+                fileInput.value = ''; // 清空文件输入
+                await loadCategories(); // 重新加载分类列表
+            } catch (error) {
+                console.error('Error importing data:', error);
+                alert(error.message || '导入失败，请重试');
+            }
+        });
+    }
+});
+
+// 更新菜单活动状态
+function updateActiveMenu(section) {
+    // 移除所有菜单项的活动状态
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // 添加当前菜单项的活动状态
+    const activeLink = document.querySelector(`[data-section="${section}"]`);
+    if (activeLink) {
+        activeLink.classList.add('active');
+    }
 } 
