@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, redirect, url_for, session
+from flask import Flask, request, jsonify, send_from_directory, redirect, url_for, session, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -6,6 +6,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from datetime import timedelta
 import os
+import json
+import tempfile
 
 app = Flask(__name__, static_folder='www', static_url_path='')
 
@@ -754,6 +756,124 @@ def auth_status():
 def api_logout():
     logout_user()
     return jsonify({'success': True})
+
+# 数据导出和恢复相关API
+@app.route('/api/admin/export', methods=['GET'])
+@login_required
+def export_data():
+    try:
+        # 获取所有分类和链接数据
+        categories = Category.query.order_by(Category.section_order, Category.category_order).all()
+        
+        # 准备导出数据
+        export_data = {
+            'categories': [],
+            'links': []
+        }
+        
+        # 处理分类数据
+        for category in categories:
+            export_data['categories'].append({
+                'title': category.title,
+                'section_name': category.section_name,
+                'section_order': category.section_order,
+                'category_order': category.category_order
+            })
+            
+            # 处理该分类下的链接数据
+            for link in category.links:
+                export_data['links'].append({
+                    'name': link.name,
+                    'url': link.url,
+                    'category_title': category.title,  # 使用标题而不是ID来关联
+                    'section_name': category.section_name
+                })
+        
+        # 直接返回JSON响应，而不是创建临时文件
+        response = jsonify(export_data)
+        response.headers['Content-Disposition'] = 'attachment; filename=links_backup.json'
+        return response
+        
+    except Exception as e:
+        return jsonify({'message': f'导出失败: {str(e)}'}), 500
+
+@app.route('/api/admin/import', methods=['POST'])
+@login_required
+def import_data():
+    if 'file' not in request.files:
+        return jsonify({'message': '没有上传文件'}), 400
+        
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'message': '没有选择文件'}), 400
+        
+    if not file.filename.endswith('.json'):
+        return jsonify({'message': '请上传JSON文件'}), 400
+        
+    try:
+        # 读取文件内容并尝试多种编码
+        content = file.read()
+        try:
+            # 首先尝试 UTF-8
+            data = json.loads(content.decode('utf-8'))
+        except UnicodeDecodeError:
+            try:
+                # 如果 UTF-8 失败，尝试 GBK
+                data = json.loads(content.decode('gbk'))
+            except UnicodeDecodeError:
+                # 如果 GBK 也失败，尝试 GB18030
+                data = json.loads(content.decode('gb18030'))
+        
+        # 验证数据格式
+        if not isinstance(data, dict) or 'categories' not in data or 'links' not in data:
+            return jsonify({'message': '无效的数据格式'}), 400
+        
+        # 开始事务
+        db.session.begin_nested()
+        
+        # 清空现有数据
+        Link.query.delete()
+        Category.query.delete()
+        
+        # 创建分类映射表 {(section_name, title): category_obj}
+        category_map = {}
+        
+        # 首先创建所有分类
+        for cat_data in data['categories']:
+            category = Category(
+                title=cat_data['title'],
+                section_name=cat_data['section_name'],
+                section_order=cat_data['section_order'],
+                category_order=cat_data['category_order']
+            )
+            db.session.add(category)
+            category_map[(cat_data['section_name'], cat_data['title'])] = category
+        
+        # 提交分类创建
+        db.session.flush()
+        
+        # 创建链接
+        for link_data in data['links']:
+            # 查找对应的分类
+            category = category_map.get((link_data['section_name'], link_data['category_title']))
+            if category:
+                link = Link(
+                    name=link_data['name'],
+                    url=link_data['url'],
+                    category_id=category.id
+                )
+                db.session.add(link)
+        
+        # 提交所有更改
+        db.session.commit()
+        return jsonify({'message': '数据导入成功'}), 200
+        
+    except json.JSONDecodeError:
+        db.session.rollback()
+        return jsonify({'message': '无效的JSON文件'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'导入失败: {str(e)}'}), 500
 
 if __name__ == '__main__':
     with app.app_context():
