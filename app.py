@@ -9,9 +9,13 @@ import os
 
 app = Flask(__name__, static_folder='www', static_url_path='')
 
+# 确保instance文件夹存在
+instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+if not os.path.exists(instance_path):
+    os.makedirs(instance_path)
+
 # 配置数据库
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:////' + os.path.join(basedir, 'instance/links.db'))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'your_database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key'  # 请更改为随机的密钥
 
@@ -92,6 +96,7 @@ class LinkSchema(ma.SQLAlchemySchema):
     name = ma.auto_field()
     url = ma.auto_field()
     category_id = ma.auto_field()
+    category = ma.Nested(lambda: CategorySchema(only=('id', 'title')))
 
 class CategorySchema(ma.SQLAlchemySchema):
     class Meta:
@@ -178,8 +183,8 @@ def delete_category(id):
 # 链接相关接口
 @app.route('/api/links', methods=['GET'])
 def get_links():
-    links = Link.query.all()
-    return jsonify(links_schema.dump(links))
+    links = Link.query.join(Category).all()
+    return jsonify(link_schema.dump(links, many=True))
 
 @app.route('/api/links/<id>', methods=['GET'])
 def get_link(id):
