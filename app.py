@@ -15,9 +15,9 @@ if not os.path.exists(instance_path):
     os.makedirs(instance_path)
 
 # 配置数据库
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'your_database.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'links.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'your-secret-key'  # 请更改为随机的密钥
+app.config['SECRET_KEY'] = 's2245d-secrd2234esadfa2t-keerea2y'  # 请更改为随机的密钥
 
 # 配置 session
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # session 过期时间设为 30 天
