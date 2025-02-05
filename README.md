@@ -27,18 +27,28 @@
 ```
 .
 ├── app.py              # Flask应用主文件
-├── import_data.py      # 数据导入脚本
-├── requirements.txt    # Python依赖
-├── Dockerfile          # Docker 构建文件
-├── docker-compose.yml  # Docker 编排配置
-├── migrations/         # 数据库迁移文件
-├── instance/          # 实例配置和数据
-├── www/               # 前端文件目录
-│   ├── css/          # 编译后的CSS
-│   ├── src/          # 源CSS文件
-│   ├── js/           # JavaScript文件
-│   └── admin/        # 后台管理界面
-└── README.md         # 项目说明
+├── routes/            # 路由文件目录
+│   ├── admin_routes.py # 管理后台路由
+│   ├── auth_routes.py  # 认证相关路由
+│   └── main_routes.py  # 前台主要路由
+├── models/            # 数据模型
+│   ├── __init__.py
+│   ├── category.py    # 分类模型
+│   ├── link.py       # 链接模型
+│   └── user.py       # 用户模型
+├── schemas/          # 序列化模式
+├── tests/           # 测试文件
+├── docs/            # 项目文档
+│   ├── api/         # API文档
+│   ├── testing/     # 测试文档
+│   └── deployment/  # 部署文档
+├── www/             # 前端文件目录
+│   ├── css/        # 编译后的CSS
+│   ├── src/        # 源CSS文件
+│   ├── js/         # JavaScript文件
+│   ├── admin/      # 后台管理界面
+│   └── index.html  # 前台首页
+└── README.md       # 项目说明
 ```
 
 ## 功能模块
@@ -64,6 +74,38 @@
   - 用户认证
   - 登录保护
   - 失败次数限制
+
+## 快速开始
+
+### 本地开发环境
+
+1. 克隆项目
+```bash
+git clone https://github.com/maxazure/home.git
+cd home
+```
+
+2. 安装依赖
+```bash
+pip install -r requirements.txt
+npm install
+```
+
+3. 初始化数据库
+```bash
+flask db upgrade
+flask create-admin  # 创建默认管理员账户
+```
+
+4. 编译CSS
+```bash
+npm run build:css  # 或 npx tailwindcss -i ./src/style.css -o ./css/style.css --watch
+```
+
+5. 运行开发服务器
+```bash
+flask run --debug
+```
 
 ## 部署方式
 
@@ -175,7 +217,37 @@ cp instance/links.db instance/links.db.backup
 - 最小配置：1核 CPU，1GB 内存
 - 推荐配置：2核 CPU，2GB 内存
 
-## 开发说明
+## 开发指南
+
+### 前端开发
+
+1. TailwindCSS 配置
+- 配置文件：`www/tailwind.config.js`
+- 主题定制：修改 theme.extend 中的配置
+
+2. 组件样式
+- 基础样式：`www/src/style.css`
+- 自定义组件：使用 @layer components 定义
+
+3. JavaScript
+- 认证相关：`www/js/auth.js`
+- 管理功能：`www/js/admin/*.js`
+
+### 后端开发
+
+1. 路由组织
+- 管理接口：`routes/admin_routes.py`
+- 认证接口：`routes/auth_routes.py`
+- 前台接口：`routes/main_routes.py`
+
+2. 数据模型
+- 位置：`models/`
+- 主要模型：Category, Link, User, IPBlock
+
+3. API开发
+- REST风格接口
+- JSON序列化使用 marshmallow
+- 统一错误处理
 
 ### CSS 修改
 修改 CSS 后需要重新编译：
