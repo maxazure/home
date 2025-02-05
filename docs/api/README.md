@@ -6,6 +6,7 @@
 2. [分类管理](#分类管理)
 3. [链接管理](#链接管理)
 4. [用户管理](#用户管理)
+5. [页面管理](#页面管理)
 
 ## 认证相关
 
@@ -273,4 +274,131 @@ POST /api/admin/ip-blocks/<id>/unblock
 {
     "message": "IP已解封"
 }
-``` 
+```
+
+## 页面管理
+
+### 获取所有页面
+
+```
+GET /api/admin/pages
+
+响应：
+[
+    {
+        "id": 1,
+        "name": "页面名称",
+        "regions": [...]
+    }
+]
+```
+
+### 添加页面
+
+```
+POST /api/admin/pages
+
+请求体：
+{
+    "name": "页面名称"
+}
+
+响应：
+{
+    "id": 1,
+    "name": "页面名称"
+}
+```
+
+### 更新页面
+
+```
+PUT /api/admin/pages/<id>
+
+请求体：
+{
+    "name": "新页面名称"
+}
+
+响应：
+{
+    "id": 1,
+    "name": "新页面名称"
+}
+```
+
+### 删除页面
+
+```
+DELETE /api/admin/pages/<id>
+
+响应：
+{
+    "message": "Page deleted successfully"
+}
+```
+
+### 获取所有区域
+
+```
+GET /api/admin/regions
+
+响应：
+[
+    {
+        "id": 1,
+        "name": "区域名称",
+        "page_id": 1,
+        "categories": [...]
+    }
+]
+```
+
+### 添加区域
+
+```
+POST /api/admin/regions
+
+请求体：
+{
+    "name": "区域名称",
+    "page_id": 1
+}
+
+响应：
+{
+    "id": 1,
+    "name": "区域名称",
+    "page_id": 1
+}
+```
+
+### 更新区域
+
+```
+PUT /api/admin/regions/<id>
+
+请求体：
+{
+    "name": "新区域名称",
+    "page_id": 1
+}
+
+响应：
+{
+    "id": 1,
+    "name": "新区域名称",
+    "page_id": 1
+}
+```
+
+### 删除区域
+
+```
+DELETE /api/admin/regions/<id>
+
+响应：
+{
+    "message": "Region deleted successfully"
+}
+```

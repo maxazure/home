@@ -2,14 +2,18 @@ from flask import Blueprint, request, jsonify, redirect, current_app, send_file
 import json
 import tempfile
 from flask_login import login_required, current_user
-from models import Category, Link, User, IPBlock, db
+from models import Category, Link, User, IPBlock, Page, Region, db
 from schemas import (
     category_schema, 
     link_schema, 
     user_schema, 
     users_schema, 
     links_schema,
-    categories_schema  # 添加这个导入
+    categories_schema,
+    page_schema,
+    pages_schema,
+    region_schema,
+    regions_schema
 )
 
 admin_bp = Blueprint('admin', __name__)
@@ -503,3 +507,85 @@ def import_data():
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': f'导入失败: {str(e)}'}), 500
+
+@admin_bp.route('/api/admin/pages', methods=['POST'])
+@login_required
+def admin_add_page():
+    name = request.json['name']
+    
+    new_page = Page(name=name)
+    db.session.add(new_page)
+    db.session.commit()
+    
+    return jsonify(page_schema.dump(new_page))
+
+@admin_bp.route('/api/admin/pages/<id>', methods=['PUT'])
+@login_required
+def admin_update_page(id):
+    page = db.session.get(Page, id)
+    if not page:
+        return jsonify({'message': '页面不存在'}), 404
+    
+    page.name = request.json.get('name', page.name)
+    
+    db.session.commit()
+    return jsonify(page_schema.dump(page))
+
+@admin_bp.route('/api/admin/pages/<id>', methods=['DELETE'])
+@login_required
+def admin_delete_page(id):
+    page = db.session.get(Page, id)
+    if not page:
+        return jsonify({'message': '页面不存在'}), 404
+    
+    db.session.delete(page)
+    db.session.commit()
+    return jsonify({'message': 'Page deleted successfully'})
+
+@admin_bp.route('/api/admin/pages', methods=['GET'])
+@login_required
+def admin_get_pages():
+    pages = Page.query.all()
+    return jsonify(pages_schema.dump(pages))
+
+@admin_bp.route('/api/admin/regions', methods=['POST'])
+@login_required
+def admin_add_region():
+    name = request.json['name']
+    page_id = request.json['page_id']
+    
+    new_region = Region(name=name, page_id=page_id)
+    db.session.add(new_region)
+    db.session.commit()
+    
+    return jsonify(region_schema.dump(new_region))
+
+@admin_bp.route('/api/admin/regions/<id>', methods=['PUT'])
+@login_required
+def admin_update_region(id):
+    region = db.session.get(Region, id)
+    if not region:
+        return jsonify({'message': '区域不存在'}), 404
+    
+    region.name = request.json.get('name', region.name)
+    region.page_id = request.json.get('page_id', region.page_id)
+    
+    db.session.commit()
+    return jsonify(region_schema.dump(region))
+
+@admin_bp.route('/api/admin/regions/<id>', methods=['DELETE'])
+@login_required
+def admin_delete_region(id):
+    region = db.session.get(Region, id)
+    if not region:
+        return jsonify({'message': '区域不存在'}), 404
+    
+    db.session.delete(region)
+    db.session.commit()
+    return jsonify({'message': 'Region deleted successfully'})
+
+@admin_bp.route('/api/admin/regions', methods=['GET'])
+@login_required
+def admin_get_regions():
+    regions = Region.query.all()
+    return jsonify(regions_schema.dump(regions))

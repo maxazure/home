@@ -1,70 +1,65 @@
-// 全局变量
 let currentCategoryId = null;
 let currentLinkId = null;
 let currentUserId = null;
+let currentPageId = null;
+let currentRegionId = null;
 
-// 页面加载完成后显示分类管理
 document.addEventListener('DOMContentLoaded', () => {
     showCategories();
 });
 
-// 更新页面标题
 function updatePageTitle(title) {
     document.getElementById('main-title').textContent = title;
 }
 
-// 显示分类管理页面
 async function showCategories() {
     updatePageTitle('分类管理');
-    // 隐藏所有其他部分
     document.getElementById('categories-section').classList.remove('hidden');
     document.getElementById('links-section').classList.add('hidden');
     document.getElementById('users-section').classList.add('hidden');
     document.getElementById('backup-section').classList.add('hidden');
-    
-    // 更新菜单活动状态
+    document.getElementById('pages-section').classList.add('hidden');
     updateActiveMenu('categories');
-    
     await loadCategories();
 }
 
-// 显示链接管理页面
 async function showLinks() {
     updatePageTitle('链接管理');
-    // 隐藏所有其他部分
     document.getElementById('categories-section').classList.add('hidden');
     document.getElementById('links-section').classList.remove('hidden');
     document.getElementById('users-section').classList.add('hidden');
     document.getElementById('backup-section').classList.add('hidden');
-    
-    // 更新菜单活动状态
+    document.getElementById('pages-section').classList.add('hidden');
     updateActiveMenu('links');
-    
     await Promise.all([loadLinks(), loadCategoriesForSelect()]);
 }
 
-// 显示用户管理页面
 async function showUsers() {
     updatePageTitle('用户管理');
-    // 隐藏所有其他部分
     document.getElementById('categories-section').classList.add('hidden');
     document.getElementById('links-section').classList.add('hidden');
     document.getElementById('users-section').classList.remove('hidden');
     document.getElementById('backup-section').classList.add('hidden');
-    
-    // 更新菜单活动状态
+    document.getElementById('pages-section').classList.add('hidden');
     updateActiveMenu('users');
-    
     await loadUsers();
 }
 
-// 加载分类列表
+async function showPages() {
+    updatePageTitle('页面管理');
+    document.getElementById('categories-section').classList.add('hidden');
+    document.getElementById('links-section').classList.add('hidden');
+    document.getElementById('users-section').classList.add('hidden');
+    document.getElementById('backup-section').classList.add('hidden');
+    document.getElementById('pages-section').classList.remove('hidden');
+    updateActiveMenu('pages');
+    await loadPages();
+}
+
 async function loadCategories() {
     try {
         const response = await fetch('/api/categories');
         const categories = await response.json();
-        
-        // 按区域分组
         const sectionGroups = {};
         categories.forEach(category => {
             if (!sectionGroups[category.section_name]) {
@@ -72,11 +67,8 @@ async function loadCategories() {
             }
             sectionGroups[category.section_name].push(category);
         });
-        
         const container = document.getElementById('categories-container');
-        container.innerHTML = ''; // 清空现有内容
-        
-        // 渲染每个区域的卡片
+        container.innerHTML = '';
         Object.entries(sectionGroups).forEach(([sectionName, categories]) => {
             const sectionCard = document.createElement('div');
             sectionCard.className = 'bg-white shadow rounded-lg overflow-hidden mb-6';
@@ -152,7 +144,6 @@ async function loadCategories() {
     }
 }
 
-// 拖拽相关函数
 function dragStart(event, categoryId) {
     event.dataTransfer.setData('text/plain', categoryId);
     const draggedElement = event.target;
@@ -184,14 +175,12 @@ function drop(event, targetCategoryId) {
     if (dropZone) {
         dropZone.classList.remove('bg-gray-100');
     }
-    
     const sourceCategoryId = event.dataTransfer.getData('text/plain');
     if (sourceCategoryId !== targetCategoryId.toString()) {
         reorderCategories(parseInt(sourceCategoryId), targetCategoryId);
     }
 }
 
-// 重新排序分类
 async function reorderCategories(sourceCategoryId, targetCategoryId) {
     try {
         const response = await fetch('/api/admin/categories/reorder', {
@@ -204,7 +193,6 @@ async function reorderCategories(sourceCategoryId, targetCategoryId) {
                 target_id: targetCategoryId
             }),
         });
-        
         if (response.ok) {
             await loadCategories();
         } else {
@@ -217,14 +205,11 @@ async function reorderCategories(sourceCategoryId, targetCategoryId) {
     }
 }
 
-// 显示区域管理模态框
 function showSectionModal(sectionName = '') {
     document.getElementById('section-modal-title').textContent = sectionName ? '修改区域名称' : '添加新区域';
     document.getElementById('section-name-input').value = sectionName;
     document.getElementById('old-section-name').value = sectionName;
     document.getElementById('section-modal').classList.remove('hidden');
-    
-    // 确保表单重置
     const form = document.getElementById('section-form');
     form.reset();
     if (sectionName) {
@@ -232,28 +217,21 @@ function showSectionModal(sectionName = '') {
     }
 }
 
-// 处理区域表单提交
 async function handleSectionSubmit(event) {
     event.preventDefault();
     const sectionNameInput = document.getElementById('section-name-input');
     const oldSectionName = document.getElementById('old-section-name').value;
     const newSectionName = sectionNameInput.value.trim();
-
     if (!newSectionName) {
         alert('请输入区域名称');
         return;
     }
-
     try {
         const url = oldSectionName ? '/api/admin/sections/update' : '/api/admin/sections';
         const data = {
             section_name: newSectionName,
             old_section_name: oldSectionName
         };
-        
-        console.log('发送请求到:', url);
-        console.log('发送数据:', data);
-        
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -261,10 +239,7 @@ async function handleSectionSubmit(event) {
             },
             body: JSON.stringify(data)
         });
-
         const responseData = await response.json();
-        console.log('服务器响应:', responseData);
-        
         if (response.ok) {
             closeModal('section-modal');
             await loadCategories();
@@ -277,7 +252,6 @@ async function handleSectionSubmit(event) {
     }
 }
 
-// 移动区域位置
 async function moveSectionUp(sectionName) {
     await moveSection(sectionName, 'up');
 }
@@ -298,7 +272,6 @@ async function moveSection(sectionName, direction) {
                 direction: direction
             }),
         });
-        
         if (response.ok) {
             await loadCategories();
         } else {
@@ -311,7 +284,6 @@ async function moveSection(sectionName, direction) {
     }
 }
 
-// 移动分类位置
 async function moveCategoryUp(categoryId) {
     await moveCategory(categoryId, 'up');
 }
@@ -332,7 +304,6 @@ async function moveCategory(categoryId, direction) {
                 direction: direction
             }),
         });
-        
         if (response.ok) {
             await loadCategories();
         } else {
@@ -345,12 +316,10 @@ async function moveCategory(categoryId, direction) {
     }
 }
 
-// 加载分类下拉选择框
 async function loadCategoriesForSelect() {
     try {
         const response = await fetch('/api/categories');
         const categories = await response.json();
-        
         const select = document.getElementById('link-category');
         select.innerHTML = categories.map(category =>
             `<option value="${category.id}">${category.title}</option>`
@@ -360,15 +329,11 @@ async function loadCategoriesForSelect() {
     }
 }
 
-// 加载区域下拉框
 async function loadSectionsForSelect() {
     try {
         const response = await fetch('/api/categories');
         const categories = await response.json();
-        
-        // 获取唯一的区域名称
         const sections = [...new Set(categories.map(c => c.section_name))];
-        
         const select = document.getElementById('category-section');
         select.innerHTML = sections.map(section =>
             `<option value="${section}">${section}</option>`
@@ -378,7 +343,6 @@ async function loadSectionsForSelect() {
     }
 }
 
-// 显示添加分类模态框
 async function showAddCategoryModal(sectionName = null) {
     currentCategoryId = null;
     document.getElementById('category-modal-title').textContent = '添加分类';
@@ -390,7 +354,6 @@ async function showAddCategoryModal(sectionName = null) {
     document.getElementById('category-modal').classList.remove('hidden');
 }
 
-// 显示编辑分类模态框
 async function editCategory(categoryId, currentName, sectionName) {
     currentCategoryId = categoryId;
     document.getElementById('category-modal-title').textContent = '编辑分类';
@@ -400,7 +363,6 @@ async function editCategory(categoryId, currentName, sectionName) {
     document.getElementById('category-modal').classList.remove('hidden');
 }
 
-// 显示添加链接模态框
 function showAddLinkModal(categoryId = null) {
     currentLinkId = null;
     document.getElementById('link-modal-title').textContent = '添加链接';
@@ -412,7 +374,6 @@ function showAddLinkModal(categoryId = null) {
     document.getElementById('link-modal').classList.remove('hidden');
 }
 
-// 显示编辑链接模态框
 function editLink(id, name, url, categoryId) {
     currentLinkId = id;
     document.getElementById('link-modal-title').textContent = '编辑链接';
@@ -422,25 +383,19 @@ function editLink(id, name, url, categoryId) {
     document.getElementById('link-modal').classList.remove('hidden');
 }
 
-// 关闭模态框
 function closeModal(modalId) {
     document.getElementById(modalId).classList.add('hidden');
 }
 
-// 处理分类表单提交
 document.getElementById('category-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const title = document.getElementById('category-title').value;
     const section_name = document.getElementById('category-section').value;
-    
     try {
         const url = currentCategoryId 
             ? `/api/admin/categories/${currentCategoryId}`
             : '/api/admin/categories';
-            
         const method = currentCategoryId ? 'PUT' : 'POST';
-        
         const response = await fetch(url, {
             method,
             headers: {
@@ -448,11 +403,10 @@ document.getElementById('category-form').addEventListener('submit', async (e) =>
             },
             body: JSON.stringify({ title, section_name }),
         });
-        
         if (response.ok) {
             closeModal('category-modal');
             await loadLinks();
-            await loadCategories(); // 同时更新分类列表
+            await loadCategories();
         } else {
             const error = await response.json();
             alert(error.message || '操作失败');
@@ -463,21 +417,16 @@ document.getElementById('category-form').addEventListener('submit', async (e) =>
     }
 });
 
-// 处理链接表单提交
 document.getElementById('link-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const name = document.getElementById('link-name').value;
     const url = document.getElementById('link-url').value;
     const category_id = document.getElementById('link-category').value;
-    
     try {
         const apiUrl = currentLinkId 
             ? `/api/admin/links/${currentLinkId}`
             : '/api/admin/links';
-            
         const method = currentLinkId ? 'PUT' : 'POST';
-        
         const response = await fetch(apiUrl, {
             method,
             headers: {
@@ -485,7 +434,6 @@ document.getElementById('link-form').addEventListener('submit', async (e) => {
             },
             body: JSON.stringify({ name, url, category_id }),
         });
-        
         if (response.ok) {
             closeModal('link-modal');
             await loadLinks();
@@ -499,17 +447,14 @@ document.getElementById('link-form').addEventListener('submit', async (e) => {
     }
 });
 
-// 删除分类
 async function deleteCategory(id) {
     if (!confirm('确定要删除这个分类吗？相关的链接也会被删除。')) {
         return;
     }
-    
     try {
         const response = await fetch(`/api/admin/categories/${id}`, {
             method: 'DELETE',
         });
-        
         if (response.ok) {
             await loadCategories();
         } else {
@@ -522,17 +467,14 @@ async function deleteCategory(id) {
     }
 }
 
-// 删除链接
 async function deleteLink(id) {
     if (!confirm('确定要删除这个链接吗？')) {
         return;
     }
-    
     try {
         const response = await fetch(`/api/admin/links/${id}`, {
             method: 'DELETE',
         });
-        
         if (response.ok) {
             await loadLinks();
         } else {
@@ -545,12 +487,10 @@ async function deleteLink(id) {
     }
 }
 
-// 加载用户列表
 async function loadUsers() {
     try {
         const response = await fetch('/api/admin/users');
         const users = await response.json();
-        
         const tbody = document.getElementById('users-table-body');
         tbody.innerHTML = users.map(user => `
             <tr class="hover:bg-gray-50">
@@ -572,7 +512,6 @@ async function loadUsers() {
     }
 }
 
-// 显示添加用户模态框
 function showAddUserModal() {
     currentUserId = null;
     document.getElementById('user-modal-title').textContent = '添加用户';
@@ -581,7 +520,6 @@ function showAddUserModal() {
     document.getElementById('user-modal').classList.remove('hidden');
 }
 
-// 显示编辑用户模态框
 function editUser(id, username) {
     currentUserId = id;
     document.getElementById('user-modal-title').textContent = '编辑用户';
@@ -590,17 +528,14 @@ function editUser(id, username) {
     document.getElementById('user-modal').classList.remove('hidden');
 }
 
-// 删除用户
 async function deleteUser(id) {
     if (!confirm('确定要删除这个用户吗？')) {
         return;
     }
-    
     try {
         const response = await fetch(`/api/admin/users/${id}`, {
             method: 'DELETE',
         });
-        
         if (response.ok) {
             await loadUsers();
         } else {
@@ -613,20 +548,15 @@ async function deleteUser(id) {
     }
 }
 
-// 处理用户表单提交
 document.getElementById('user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-    
     try {
         const url = currentUserId 
             ? `/api/admin/users/${currentUserId}`
             : '/api/admin/users';
-            
         const method = currentUserId ? 'PUT' : 'POST';
-        
         const response = await fetch(url, {
             method,
             headers: {
@@ -634,7 +564,6 @@ document.getElementById('user-form').addEventListener('submit', async (e) => {
             },
             body: JSON.stringify({ username, password }),
         });
-        
         if (response.ok) {
             closeModal('user-modal');
             await loadUsers();
@@ -648,17 +577,14 @@ document.getElementById('user-form').addEventListener('submit', async (e) => {
     }
 });
 
-// 添加新的删除分类确认函数
 async function deleteCategoryWithConfirm(id, title) {
     if (!confirm(`确定要删除分类"${title}"吗？\n注意：该分类下的所有链接都将被删除！`)) {
         return;
     }
-    
     try {
         const response = await fetch(`/api/admin/categories/${id}`, {
             method: 'DELETE',
         });
-        
         if (response.ok) {
             await loadLinks();
             alert('删除成功！');
@@ -690,12 +616,10 @@ function updateUserSection(data) {
     }
 }
 
-// 删除区域
 async function deleteSection(sectionName) {
     if (!confirm(`确定要删除区域 "${sectionName}" 吗？\n注意：这将同时删除该区域下的所有分类和链接！`)) {
         return;
     }
-
     try {
         const response = await fetch('/api/admin/sections/delete', {
             method: 'POST',
@@ -706,9 +630,7 @@ async function deleteSection(sectionName) {
                 section_name: sectionName
             })
         });
-
         const data = await response.json();
-        
         if (response.ok) {
             await loadCategories();
         } else {
@@ -724,8 +646,6 @@ async function loadLinks() {
     try {
         const response = await fetch('/api/links');
         const links = await response.json();
-        
-        // 按分类分组
         const categoryGroups = {};
         links.forEach(link => {
             if (!categoryGroups[link.category_id]) {
@@ -737,11 +657,8 @@ async function loadLinks() {
             }
             categoryGroups[link.category_id].links.push(link);
         });
-        
         const linksContainer = document.getElementById('links-container');
         linksContainer.innerHTML = '';
-        
-        // 渲染每个分类的卡片
         Object.values(categoryGroups).forEach(({id: categoryId, name, links}) => {
             const categoryCard = document.createElement('div');
             categoryCard.className = 'bg-white shadow rounded-lg overflow-hidden mb-6';
@@ -777,20 +694,16 @@ async function loadLinks() {
     }
 }
 
-// 显示数据备份页面
 function showBackup() {
     updatePageTitle('数据备份');
-    // 隐藏所有其他部分
     document.getElementById('categories-section').classList.add('hidden');
     document.getElementById('links-section').classList.add('hidden');
     document.getElementById('users-section').classList.add('hidden');
     document.getElementById('backup-section').classList.remove('hidden');
-    
-    // 更新菜单活动状态
+    document.getElementById('pages-section').classList.add('hidden');
     updateActiveMenu('backup');
 }
 
-// 导出数据
 async function exportData() {
     try {
         const response = await fetch('/api/admin/export');
@@ -798,8 +711,6 @@ async function exportData() {
             const error = await response.json();
             throw new Error(error.message || '导出失败');
         }
-        
-        // 获取文件名
         const contentDisposition = response.headers.get('content-disposition');
         let filename = 'links_backup.json';
         if (contentDisposition) {
@@ -808,8 +719,6 @@ async function exportData() {
                 filename = matches[1].replace(/['"]/g, '');
             }
         }
-        
-        // 下载文件
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -825,48 +734,38 @@ async function exportData() {
     }
 }
 
-// 初始化导入表单处理
 document.addEventListener('DOMContentLoaded', () => {
     const importForm = document.getElementById('import-form');
     if (importForm) {
         importForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            
             const fileInput = document.getElementById('import-file');
             const file = fileInput.files[0];
-            
             if (!file) {
                 alert('请选择要导入的文件');
                 return;
             }
-            
             if (!file.name.endsWith('.json')) {
                 alert('请选择JSON格式的文件');
                 return;
             }
-            
             if (!confirm('导入数据将覆盖现有的所有数据，确定要继续吗？')) {
                 return;
             }
-            
             const formData = new FormData();
             formData.append('file', file);
-            
             try {
                 const response = await fetch('/api/admin/import', {
                     method: 'POST',
                     body: formData
                 });
-                
                 const result = await response.json();
-                
                 if (!response.ok) {
                     throw new Error(result.message || '导入失败');
                 }
-                
                 alert('数据导入成功');
-                fileInput.value = ''; // 清空文件输入
-                await loadCategories(); // 重新加载分类列表
+                fileInput.value = '';
+                await loadCategories();
             } catch (error) {
                 console.error('Error importing data:', error);
                 alert(error.message || '导入失败，请重试');
@@ -875,16 +774,183 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// 更新菜单活动状态
 function updateActiveMenu(section) {
-    // 移除所有菜单项的活动状态
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
-    
-    // 添加当前菜单项的活动状态
     const activeLink = document.querySelector(`[data-section="${section}"]`);
     if (activeLink) {
         activeLink.classList.add('active');
     }
-} 
+}
+
+async function loadPages() {
+    try {
+        const response = await fetch('/api/admin/pages');
+        const pages = await response.json();
+        const container = document.getElementById('pages-container');
+        container.innerHTML = '';
+        pages.forEach(page => {
+            const pageCard = document.createElement('div');
+            pageCard.className = 'bg-white shadow rounded-lg overflow-hidden mb-6';
+            pageCard.innerHTML = `
+                <div class="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">${page.name}</h3>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="editPage(${page.id}, '${page.name}')" class="text-sm text-blue-600 hover:text-blue-800">编辑</button>
+                        <button onclick="deletePage(${page.id})" class="text-sm text-red-600 hover:text-red-800">删除</button>
+                    </div>
+                </div>
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="space-y-4" id="regions-${page.id}">
+                        ${page.regions.map(region => `
+                            <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-base font-medium text-gray-900">${region.name}</h4>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="editRegion(${region.id}, '${region.name}', ${page.id})"
+                                            class="text-blue-600 hover:text-blue-800">编辑</button>
+                                    <button onclick="deleteRegion(${region.id})"
+                                            class="text-red-600 hover:text-red-900">删除</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="showAddRegionModal(${page.id})" class="btn btn-primary mt-4">添加区域</button>
+                </div>
+            `;
+            container.appendChild(pageCard);
+        });
+    } catch (error) {
+        console.error('Error loading pages:', error);
+        alert('加载页面失败，请重试');
+    }
+}
+
+function showAddPageModal() {
+    currentPageId = null;
+    document.getElementById('page-modal-title').textContent = '添加页面';
+    document.getElementById('page-name').value = '';
+    document.getElementById('page-modal').classList.remove('hidden');
+}
+
+function editPage(id, name) {
+    currentPageId = id;
+    document.getElementById('page-modal-title').textContent = '编辑页面';
+    document.getElementById('page-name').value = name;
+    document.getElementById('page-modal').classList.remove('hidden');
+}
+
+document.getElementById('page-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('page-name').value;
+    try {
+        const url = currentPageId 
+            ? `/api/admin/pages/${currentPageId}`
+            : '/api/admin/pages';
+        const method = currentPageId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name }),
+        });
+        if (response.ok) {
+            closeModal('page-modal');
+            await loadPages();
+        } else {
+            const error = await response.json();
+            alert(error.message || '操作失败');
+        }
+    } catch (error) {
+        console.error('Error saving page:', error);
+        alert('保存失败，请重试');
+    }
+});
+
+async function deletePage(id) {
+    if (!confirm('确定要删除这个页面吗？相关的区域也会被删除。')) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/admin/pages/${id}`, {
+            method: 'DELETE',
+        });
+        if (response.ok) {
+            await loadPages();
+        } else {
+            const error = await response.json();
+            alert(error.message || '删除失败');
+        }
+    } catch (error) {
+        console.error('Error deleting page:', error);
+        alert('删除失败，请重试');
+    }
+}
+
+function showAddRegionModal(pageId) {
+    currentRegionId = null;
+    document.getElementById('region-modal-title').textContent = '添加区域';
+    document.getElementById('region-name').value = '';
+    document.getElementById('region-page').value = pageId;
+    document.getElementById('region-modal').classList.remove('hidden');
+}
+
+function editRegion(id, name, pageId) {
+    currentRegionId = id;
+    document.getElementById('region-modal-title').textContent = '编辑区域';
+    document.getElementById('region-name').value = name;
+    document.getElementById('region-page').value = pageId;
+    document.getElementById('region-modal').classList.remove('hidden');
+}
+
+document.getElementById('region-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('region-name').value;
+    const page_id = document.getElementById('region-page').value;
+    try {
+        const url = currentRegionId 
+            ? `/api/admin/regions/${currentRegionId}`
+            : '/api/admin/regions';
+        const method = currentRegionId ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, page_id }),
+        });
+        if (response.ok) {
+            closeModal('region-modal');
+            await loadPages();
+        } else {
+            const error = await response.json();
+            alert(error.message || '操作失败');
+        }
+    } catch (error) {
+        console.error('Error saving region:', error);
+        alert('保存失败，请重试');
+    }
+});
+
+async function deleteRegion(id) {
+    if (!confirm('确定要删除这个区域吗？')) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/admin/regions/${id}`, {
+            method: 'DELETE',
+        });
+        if (response.ok) {
+            await loadPages();
+        } else {
+            const error = await response.json();
+            alert(error.message || '删除失败');
+        }
+    } catch (error) {
+        console.error('Error deleting region:', error);
+        alert('删除失败，请重试');
+    }
+}

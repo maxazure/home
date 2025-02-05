@@ -55,3 +55,16 @@ class Link(db.Model):
     name = db.Column(db.String(100), nullable=False)
     url = db.Column(db.String(500), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+
+class Page(db.Model):
+    __tablename__ = 'pages'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    regions = db.relationship('Region', backref='page', lazy=True)
+
+class Region(db.Model):
+    __tablename__ = 'regions'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    page_id = db.Column(db.Integer, db.ForeignKey('pages.id'), nullable=False)
+    categories = db.relationship('Category', backref='region', lazy=True)
