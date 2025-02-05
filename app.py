@@ -8,34 +8,39 @@ import os
 import json
 import tempfile
 
-from models import db, User, IPBlock, Category, Link
-from schemas import ma, category_schema, categories_schema, link_schema, links_schema, user_schema, users_schema
-from routes.auth_routes import auth_bp
-from routes.category_routes import category_bp
-from routes.link_routes import link_bp
-from routes.admin_routes import admin_bp
-
+# 首先初始化 Flask 应用
 app = Flask(__name__, static_folder='www', static_url_path='')
 
-# 确保instance文件夹存在
+# 初始化数据库配置
 instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
 if not os.path.exists(instance_path):
     os.makedirs(instance_path)
 
-# 配置数据库
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'links.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 's2245d-secrd2234esadfa2t-keerea2y'  # 请更改为随机的密钥
+app.config['SECRET_KEY'] = 's2245d-secrd2234esadfa2t-keerea2y'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
-# 配置 session
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # session 过期时间设为 30 天
-
-# 初始化扩展
+# 然后按顺序导入模型和其他模块
+from models import db, User, IPBlock, Category, Link
 db.init_app(app)
+
+# 初始化 marshmallow
+from schemas import ma, category_schema, categories_schema, link_schema, links_schema, user_schema, users_schema
 ma.init_app(app)
+
+# 设置登录管理器
 login_manager = LoginManager(app)
 login_manager.login_view = 'auth.login'
+
+# 初始化数据库迁移
 migrate = Migrate(app, db)
+
+# 最后导入路由模块
+from routes.auth_routes import auth_bp
+from routes.category_routes import category_bp
+from routes.link_routes import link_bp
+from routes.admin_routes import admin_bp
 
 @login_manager.user_loader
 def load_user(user_id):

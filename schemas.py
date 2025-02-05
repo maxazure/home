@@ -29,3 +29,11 @@ class UserSchema(ma.SQLAlchemySchema):
     id = ma.auto_field()
     username = ma.auto_field()
     created_at = ma.auto_field()
+
+# 创建schema实例
+link_schema = LinkSchema()
+links_schema = LinkSchema(many=True)
+category_schema = CategorySchema()
+categories_schema = CategorySchema(many=True)
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)

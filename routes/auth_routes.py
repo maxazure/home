@@ -1,14 +1,14 @@
-from flask import Blueprint, request, jsonify, redirect, session
+from flask import Blueprint, request, jsonify, redirect, session, current_app
 from flask_login import login_user, login_required, logout_user, current_user
 from models import User
 
 auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/api/admin/login', methods=['GET'])
+@auth_bp.route('/admin/login')  # 修改路由路径
 def login():
     if current_user.is_authenticated:
         return redirect('/admin')
-    return send_from_directory('www', 'admin/login.html')
+    return current_app.send_static_file('admin/index.html')  # 使用同一个入口文件
 
 @auth_bp.route('/api/admin/login', methods=['POST'])
 def admin_login():

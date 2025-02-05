@@ -1,14 +1,23 @@
-from flask import Blueprint, request, jsonify, redirect
+from flask import Blueprint, request, jsonify, redirect, current_app, send_file
+import json
+import tempfile
 from flask_login import login_required, current_user
 from models import Category, Link, User, IPBlock, db
-from schemas import category_schema, link_schema, user_schema, links_schema
+from schemas import (
+    category_schema, 
+    link_schema, 
+    user_schema, 
+    users_schema, 
+    links_schema,
+    categories_schema  # 添加这个导入
+)
 
 admin_bp = Blueprint('admin', __name__)
 
 @admin_bp.route('/admin')
 @login_required
 def admin_dashboard():
-    return app.send_static_file('admin/index.html')
+    return current_app.send_static_file('admin/index.html')
 
 @admin_bp.route('/api/admin/categories', methods=['POST'])
 @login_required
@@ -408,3 +417,89 @@ def admin_delete_section():
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': f'删除区域失败: {str(e)}'}), 500
+
+@admin_bp.route('/api/admin/export', methods=['GET'])
+@login_required
+def export_data():
+    try:
+        # 获取所有分类和链接数据
+        categories = Category.query.order_by(Category.section_order, Category.category_order).all()
+        export_data = categories_schema.dump(categories)
+        
+        # 创建临时文件
+        temp = tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.json')
+        json.dump(export_data, temp, ensure_ascii=False, indent=2)
+        temp.close()
+        
+        # 发送文件
+        return send_file(
+            temp.name,
+            mimetype='application/json',
+            as_attachment=True,
+            download_name='backup.json'
+        )
+    except Exception as e:
+        return jsonify({'message': f'导出失败: {str(e)}'}), 500
+
+@admin_bp.route('/api/admin/import', methods=['POST'])
+@login_required
+def import_data():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'message': '没有上传文件'}), 400
+            
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'message': '未选择文件'}), 400
+            
+        if not file.filename.endswith('.json'):
+            return jsonify({'message': '只支持.json格式文件'}), 400
+            
+        # 读取并解析JSON数据
+        import_data = json.loads(file.read().decode('utf-8'))
+        
+        # 开始导入数据
+        for category_data in import_data:
+            # 检查分类是否已存在
+            existing_category = Category.query.filter_by(
+                section_name=category_data['section_name'],
+                title=category_data['title']
+            ).first()
+            
+            if existing_category:
+                category = existing_category
+            else:
+                # 创建新分类
+                category = Category(
+                    title=category_data['title'],
+                    section_name=category_data['section_name']
+                )
+                db.session.add(category)
+                db.session.flush()  # 获取新分类的ID
+            
+            # 导入链接
+            if 'links' in category_data:
+                for link_data in category_data['links']:
+                    # 检查链接是否已存在
+                    existing_link = Link.query.filter_by(
+                        name=link_data['name'],
+                        url=link_data['url'],
+                        category_id=category.id
+                    ).first()
+                    
+                    if not existing_link:
+                        link = Link(
+                            name=link_data['name'],
+                            url=link_data['url'],
+                            category_id=category.id
+                        )
+                        db.session.add(link)
+        
+        db.session.commit()
+        return jsonify({'message': '数据导入成功'}), 200
+        
+    except json.JSONDecodeError:
+        return jsonify({'message': '无效的JSON文件格式'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'导入失败: {str(e)}'}), 500
