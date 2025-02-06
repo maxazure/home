@@ -1,4 +1,4 @@
-from app import app, db, Category, Link, User
+from app import app, db, Category, Link, User, Page, Region
 import json
 import sys
 from urllib.parse import urlparse
@@ -249,17 +249,23 @@ def import_data(filename=None):
                             'title': c.title, 
                             'section_name': c.section_name,
                             'section_order': c.section_order,
-                            'category_order': c.category_order
-                        }
-                        for c in existing_categories
+                            'category_order': c.category_order,
+                            'region_id': c.region_id
+                        } for c in existing_categories
                     ],
                     'links': [
-                        {'id': l.id, 'name': l.name, 'url': l.url, 'category_id': l.category_id}
-                        for l in existing_links
+                        {
+                            'id': l.id,
+                            'name': l.name,
+                            'url': l.url,
+                            'category_id': l.category_id
+                        } for l in existing_links
                     ]
                 }
+                
                 with open('data_backup.json', 'w', encoding='utf-8') as f:
                     json.dump(backup_data, f, ensure_ascii=False, indent=2)
+                print("数据备份完成")
             except Exception as e:
                 print(f"备份数据失败: {e}")
                 return
@@ -269,31 +275,44 @@ def import_data(filename=None):
                 Link.query.delete()
                 Category.query.delete()
                 db.session.commit()
+                print("现有数据已清空")
             except Exception as e:
                 print(f"清空数据失败: {e}")
                 db.session.rollback()
                 return
             
+            # 获取或创建首页
+            home_page = Page.query.filter_by(slug='home').first()
+            if not home_page:
+                home_page = Page(name='Home')
+                db.session.add(home_page)
+                db.session.commit()
+            
             # 导入新数据
             try:
-                # 记录每个区域的顺序
-                for section in data:
-                    section_name = section['sectionName']
-                    section_order = section['section_order']
+                for section_data in data:
+                    # 创建区域
+                    region = Region(
+                        name=section_data['sectionName'],
+                        page_id=home_page.id
+                    )
+                    db.session.add(region)
+                    db.session.flush()  # 获取region.id
                     
-                    for row in section['rows']:
+                    # 处理每个分类
+                    for row in section_data['rows']:
                         for column in row['columns']:
-                            # 创建分类
                             category = Category(
                                 title=column['title'],
-                                section_name=section_name,
-                                section_order=section_order,
-                                category_order=column['category_order']
+                                section_name=section_data['sectionName'],
+                                section_order=section_data.get('section_order', 0),
+                                category_order=column.get('category_order', 0),
+                                region_id=region.id
                             )
                             db.session.add(category)
-                            db.session.commit()
+                            db.session.flush()  # 获取category.id
                             
-                            # 创建链接
+                            # 添加链接
                             for link_data in column['links']:
                                 link = Link(
                                     name=link_data['name'],
@@ -301,67 +320,26 @@ def import_data(filename=None):
                                     category_id=category.id
                                 )
                                 db.session.add(link)
-                            db.session.commit()
                 
-                # 重置 admin 用户状态
-                admin = User.query.filter_by(username='admin').first()
-                if admin:
-                    admin.set_password('admin')  # 使用 set_password 方法重置密码
-                    admin.is_locked = False  # 解除锁定状态
-                    admin.failed_login_attempts = 0  # 重置失败尝试次数
-                    admin.last_failed_login = None  # 清除最后失败时间
-                    db.session.commit()
-                    print("Admin用户状态已重置！")
-                else:
-                    # 创建新的 admin 用户
-                    new_admin = User(username='admin')
-                    new_admin.set_password('admin')  # 使用 set_password 方法设置密码
-                    new_admin.is_locked = False
-                    new_admin.failed_login_attempts = 0
-                    new_admin.last_failed_login = None
-                    db.session.add(new_admin)
-                    db.session.commit()
-                    print("已创建新的 admin 用户！")
+                db.session.commit()
+                print("数据导入成功")
                 
-                # 验证 admin 用户登录
-                if not verify_admin_login():
-                    raise Exception("Admin用户验证失败")
+                # 验证数据
+                categories_count = Category.query.count()
+                links_count = Link.query.count()
+                print(f"已导入 {categories_count} 个分类和 {links_count} 个链接")
                 
-                print("数据导入完成！")
             except Exception as e:
                 print(f"导入数据失败: {e}")
                 db.session.rollback()
-                # 尝试恢复备份
-                try:
-                    for category in backup_data['categories']:
-                        c = Category(
-                            id=category['id'],
-                            title=category['title'],
-                            section_name=category['section_name'],
-                            section_order=category['section_order'],
-                            category_order=category['category_order']
-                        )
-                        db.session.add(c)
-                    db.session.commit()
-                    
-                    for link in backup_data['links']:
-                        l = Link(
-                            id=link['id'],
-                            name=link['name'],
-                            url=link['url'],
-                            category_id=link['category_id']
-                        )
-                        db.session.add(l)
-                    db.session.commit()
-                    print("已恢复到原有数据")
-                except Exception as e:
-                    print(f"恢复数据失败: {e}")
-                    print("请手动恢复 data_backup.json 中的数据")
-                
+                return
+            
     except Exception as e:
-        print(f"发生错误: {e}")
+        print(f"执行导入时发生错误: {e}")
+        return
 
 if __name__ == '__main__':
-    # 如果提供了文件名参数，则从文件导入数据
-    filename = sys.argv[1] if len(sys.argv) > 1 else None
-    import_data(filename) 
+    if len(sys.argv) > 1:
+        import_data(sys.argv[1])
+    else:
+        import_data() 
