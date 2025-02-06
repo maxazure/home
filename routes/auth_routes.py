@@ -13,7 +13,7 @@ def login():
         return redirect('/admin')
     return current_app.send_static_file('admin/index.html')
 
-@auth_bp.route('/api/admin/login', methods=['POST'])
+@auth_bp.route('/api/login', methods=['POST'])
 def admin_login():
     if not request.is_json:
         return jsonify({'message': '请求格式错误'}), 400
@@ -74,7 +74,7 @@ def admin_login():
         'user': user_schema.dump(user)
     })
 
-@auth_bp.route('/api/admin/logout')
+@auth_bp.route('/api/logout')
 @login_required
 def logout():
     logout_user()

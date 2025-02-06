@@ -7,7 +7,7 @@ from schemas import pages_schema, regions_schema, categories_schema, links_schem
 
 backup_bp = Blueprint('backup', __name__)
 
-@backup_bp.route('/api/admin/export', methods=['GET'])
+@backup_bp.route('/api/export', methods=['GET'])
 @login_required
 def export_data():
     try:
@@ -33,7 +33,7 @@ def export_data():
     except Exception as e:
         return jsonify({'message': f'导出失败: {str(e)}'}), 500
 
-@backup_bp.route('/api/admin/import', methods=['POST'])
+@backup_bp.route('/api/import', methods=['POST'])
 @login_required
 def import_data():
     try:

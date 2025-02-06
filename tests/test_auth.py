@@ -32,7 +32,7 @@ class AuthTestCase(unittest.TestCase):
             db.session.add(user)
             db.session.commit()
 
-            response = self.client.post('/api/admin/login',
+            response = self.client.post('/api/login',
                 json={'username': 'testuser', 'password': 'testpass'})
             data = json.loads(response.data)
             
@@ -43,16 +43,16 @@ class AuthTestCase(unittest.TestCase):
     def test_login_validation(self):
         """测试登录数据验证"""
         # 空数据测试
-        response = self.client.post('/api/admin/login', json={})
+        response = self.client.post('/api/login', json={})
         self.assertEqual(response.status_code, 400)
 
         # 缺少密码测试
-        response = self.client.post('/api/admin/login',
+        response = self.client.post('/api/login',
             json={'username': 'testuser'})
         self.assertEqual(response.status_code, 400)
 
         # 缺少用户名测试
-        response = self.client.post('/api/admin/login',
+        response = self.client.post('/api/login',
             json={'password': 'testpass'})
         self.assertEqual(response.status_code, 400)
 
@@ -65,7 +65,7 @@ class AuthTestCase(unittest.TestCase):
             # 不存在的用户，触发 IP 失败计数
             for _ in range(10):
                 response = self.client.post(
-                    '/api/admin/login',
+                    '/api/login',
                     json={'username': 'nonexistentuser', 'password': 'any'}
                 )
             # 第 10 次应返回 403
@@ -78,7 +78,7 @@ class AuthTestCase(unittest.TestCase):
 
             # 尝试正确登录，仍应 403，且提示同样消息
             response = self.client.post(
-                '/api/admin/login',
+                '/api/login',
                 json={'username': 'testuser', 'password': 'testpass'}
             )
             self.assertEqual(response.status_code, 403)
@@ -96,7 +96,7 @@ class AuthTestCase(unittest.TestCase):
             db.session.add(user)
             db.session.commit()
 
-            response = self.client.post('/api/admin/login',
+            response = self.client.post('/api/login',
                 json={'username': 'blocked_ip_user', 'password': 'testpass'})
             self.assertEqual(response.status_code, 403)
             self.assertIn('访问被拒绝', response.get_json()['message'])
@@ -116,14 +116,14 @@ class AuthTestCase(unittest.TestCase):
             # 前 9 次错误在 IP 2.2.2.2
             for _ in range(9):
                 response = self.client.post(
-                    '/api/admin/login',
+                    '/api/login',
                     json={'username': 'testuser', 'password': 'wrongpass'},
                     environ_base={'REMOTE_ADDR': '2.2.2.2'}
                 )
 
             # 第 10 次错误在 IP 3.3.3.3
             response = self.client.post(
-                '/api/admin/login',
+                '/api/login',
                 json={'username': 'testuser', 'password': 'wrongpass'},
                 environ_base={'REMOTE_ADDR': '3.3.3.3'}
             )
@@ -139,7 +139,7 @@ class AuthTestCase(unittest.TestCase):
 
             # 使用正确密码仍应 403
             response = self.client.post(
-                '/api/admin/login',
+                '/api/login',
                 json={'username': 'testuser', 'password': 'testpass'}
             )
             self.assertEqual(response.status_code, 403)
@@ -159,7 +159,7 @@ class AuthTestCase(unittest.TestCase):
             db.session.add(user)
             db.session.commit()
 
-            self.client.post('/api/admin/login',
+            self.client.post('/api/login',
                 json={'username': 'testuser', 'password': 'testpass'})
         
             response = self.client.get('/api/auth/status')
@@ -176,11 +176,11 @@ class AuthTestCase(unittest.TestCase):
             db.session.add(user)
             db.session.commit()
 
-            self.client.post('/api/admin/login',
+            self.client.post('/api/login',
                 json={'username': 'testuser', 'password': 'testpass'})
         
             # 测试登出
-            response = self.client.get('/api/admin/logout')
+            response = self.client.get('/api/logout')
             self.assertEqual(response.status_code, 200)
         
             # 验证登出后状态
