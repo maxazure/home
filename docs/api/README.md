@@ -7,6 +7,7 @@
 3. [链接管理](#链接管理)
 4. [用户管理](#用户管理)
 5. [页面管理](#页面管理)
+6. [数据备份](#数据备份)
 
 ## 认证相关
 
@@ -400,5 +401,37 @@ DELETE /api/admin/regions/<id>
 响应：
 {
     "message": "Region deleted successfully"
+}
+```
+
+## 数据备份
+
+### 导出数据
+
+```
+GET /api/admin/backup/export
+
+响应：
+{
+    "pages": [...],
+    "regions": [...],
+    "categories": [...],
+    "links": [...]
+}
+```
+
+### 导入数据
+
+```
+POST /api/admin/backup/import
+
+请求体：
+{
+    "file": "备份文件"
+}
+
+响应：
+{
+    "message": "数据导入成功"
 }
 ```
