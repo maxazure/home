@@ -3,7 +3,7 @@ from flask_login import login_required
 from models import db, Page
 from schemas import page_schema, pages_schema
 
-page_bp = Blueprint('page', __name__, url_prefix='/api/pages')
+page_bp = Blueprint('admin_page', __name__, url_prefix='/api/pages')
 
 @page_bp.route('/', methods=['GET'])
 def get_pages():

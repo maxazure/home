@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
+from flask_login import login_required
 from models import Category, db
 from schemas import category_schema, categories_schema
 
-category_bp = Blueprint('category', __name__)
+category_bp = Blueprint('admin_category', __name__)
 
 @category_bp.route('/api/categories', methods=['GET'])
 def get_categories():

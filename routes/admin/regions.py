@@ -3,7 +3,7 @@ from flask_login import login_required
 from models import db, Region
 from schemas import region_schema, regions_schema
 
-region_bp = Blueprint('region', __name__, url_prefix='/api/regions')
+region_bp = Blueprint('admin_region', __name__, url_prefix='/api/regions')
 
 @region_bp.route('/', methods=['GET'])
 def get_regions():

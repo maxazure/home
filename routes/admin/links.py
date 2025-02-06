@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from models import Link, Category, db
 from schemas import link_schema, links_schema
 
-link_bp = Blueprint('link', __name__)
+link_bp = Blueprint('admin_link', __name__)
 
 @link_bp.route('/api/links', methods=['GET'])
 def get_links():

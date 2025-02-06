@@ -110,14 +110,14 @@ class ConfigTestCase(BaseTestCase):
 class BlueprintTestCase(BaseTestCase):
     def test_blueprints_registered(self):
         """测试蓝图注册"""
-        blueprints = ['auth', 'category', 'link', 'admin', 'page', 'region']
+        blueprints = ['auth', 'category', 'link', 'admin_category', 'admin_link', 'admin_page', 'admin_region', 'page', 'region']
         for blueprint in blueprints:
             self.assertIn(blueprint, app.blueprints)
 
     def test_blueprint_url_prefixes(self):
         """测试蓝图 URL 前缀"""
-        self.assertEqual(app.blueprints['page'].url_prefix, '/api/pages')
-        self.assertEqual(app.blueprints['region'].url_prefix, '/api/regions')
+        self.assertEqual(app.blueprints['admin_page'].url_prefix, '/api/pages')
+        self.assertEqual(app.blueprints['admin_region'].url_prefix, '/api/regions')
 
 if __name__ == '__main__':
     unittest.main()
