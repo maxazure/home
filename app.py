@@ -50,7 +50,13 @@ migrate = Migrate(app, db)
 from routes.auth_routes import auth_bp
 from routes.category_routes import category_bp
 from routes.link_routes import link_bp
-from routes.admin_routes import admin_bp
+from routes.admin.categories import category_bp as admin_category_bp
+from routes.admin.links import link_bp as admin_link_bp
+from routes.admin.users import user_bp as admin_user_bp
+from routes.admin.sections import section_bp as admin_section_bp
+from routes.admin.pages import page_bp as admin_page_bp
+from routes.admin.regions import region_bp as admin_region_bp
+from routes.admin.backup import backup_bp as admin_backup_bp
 from routes.page_routes import page_bp  # 新增页面路由
 from routes.region_routes import region_bp  # 新增区域路由
 
@@ -79,7 +85,13 @@ def not_found(e):
 app.register_blueprint(auth_bp)
 app.register_blueprint(category_bp)
 app.register_blueprint(link_bp)
-app.register_blueprint(admin_bp)
+app.register_blueprint(admin_category_bp, url_prefix='/api/admin')
+app.register_blueprint(admin_link_bp, url_prefix='/api/admin')
+app.register_blueprint(admin_user_bp, url_prefix='/api/admin')
+app.register_blueprint(admin_section_bp, url_prefix='/api/admin')
+app.register_blueprint(admin_page_bp, url_prefix='/api/admin')
+app.register_blueprint(admin_region_bp, url_prefix='/api/admin')
+app.register_blueprint(admin_backup_bp, url_prefix='/api/admin')
 app.register_blueprint(page_bp)  # 注册页面路由
 app.register_blueprint(region_bp)  # 注册区域路由
 
