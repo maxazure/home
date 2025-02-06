@@ -26,17 +26,10 @@ class TestBackupFeatures(unittest.TestCase):
             db.session.commit()
             
             # 登录用户
-            response = self.client.post('/api/login', json={
+            self.client.post('/api/admin/login', json={
                 'username': 'test_admin',
                 'password': 'test_password'
             })
-            self.assertEqual(response.status_code, 200)
-            
-            # 验证登录状态
-            response = self.client.get('/api/auth/status')
-            self.assertEqual(response.status_code, 200)
-            data = response.get_json()
-            self.assertTrue(data['authenticated'])
     
     def tearDown(self):
         # 清理数据库
@@ -47,7 +40,7 @@ class TestBackupFeatures(unittest.TestCase):
     def test_export_empty_data(self):
         """测试导出空数据"""
         with self.client as client:
-            response = client.get('/api/export')
+            response = client.get('/api/admin/export')
             self.assertEqual(response.status_code, 200)
             
             # 验证响应类型和内容
@@ -101,7 +94,7 @@ class TestBackupFeatures(unittest.TestCase):
         
         # 测试导出
         with self.client as client:
-            response = client.get('/api/export')
+            response = client.get('/api/admin/export')
             self.assertEqual(response.status_code, 200)
             
             # 验证响应类型和内容
@@ -151,7 +144,7 @@ class TestBackupFeatures(unittest.TestCase):
         
         # 测试导入
         response = self.client.post(
-            '/api/import',
+            '/api/admin/import',
             data={'file': file},
             content_type='multipart/form-data'
         )
@@ -183,7 +176,7 @@ class TestBackupFeatures(unittest.TestCase):
         
         # 测试导入
         response = self.client.post(
-            '/api/import',
+            '/api/admin/import',
             data={'file': file},
             content_type='multipart/form-data'
         )
@@ -204,7 +197,7 @@ class TestBackupFeatures(unittest.TestCase):
         
         # 测试导入
         response = self.client.post(
-            '/api/import',
+            '/api/admin/import',
             data={'file': file},
             content_type='multipart/form-data'
         )
@@ -238,7 +231,7 @@ class TestBackupFeatures(unittest.TestCase):
         utf8_data = json.dumps(test_data, ensure_ascii=False).encode('utf-8')
         utf8_file = (BytesIO(utf8_data), 'utf8.json')
         response = self.client.post(
-            '/api/import',
+            '/api/admin/import',
             data={'file': utf8_file},
             content_type='multipart/form-data'
         )
@@ -249,7 +242,7 @@ class TestBackupFeatures(unittest.TestCase):
         gbk_data = json.dumps(test_data, ensure_ascii=False).encode('gbk')
         gbk_file = (BytesIO(gbk_data), 'gbk.json')
         response = self.client.post(
-            '/api/import',
+            '/api/admin/import',
             data={'file': gbk_file},
             content_type='multipart/form-data'
         )

@@ -54,6 +54,13 @@
                         </svg>
                         数据备份
                     </a>
+
+                    <a href="#" onclick="showPages()" class="nav-link group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-50 hover:text-gray-900" data-section="pages">
+                        <svg class="mr-4 h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                        </svg>
+                        页面管理
+                    </a>
                 </nav>
             </div>
 
@@ -157,6 +164,16 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- 页面管理部分 -->
+                        <div id="pages-section" class="hidden">
+                            <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                                <button onclick="showAddPageModal()" class="btn btn-primary">添加页面</button>
+                            </div>
+                            <div class="mt-8 space-y-8" id="pages-container">
+                                <!-- 页面卡片将通过JavaScript动态加载 -->
                             </div>
                         </div>
                     </div>
@@ -275,6 +292,59 @@
             </div>
         </div>
     </div>
+
+    <!-- 页面表单模态框 -->
+    <div id="page-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity hidden" aria-hidden="true">
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                        <h3 id="page-modal-title" class="text-lg font-medium leading-6 text-gray-900 mb-4">添加页面</h3>
+                        <form id="page-form" class="space-y-4">
+                            <div>
+                                <label for="page-name" class="block text-sm font-medium text-gray-700">页面名称</label>
+                                <input type="text" id="page-name" required class="form-input">
+                            </div>
+                            <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                                <button type="submit" class="btn btn-primary">保存</button>
+                                <button type="button" class="btn" onclick="closeModal('page-modal')">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 区域表单模态框 -->
+    <div id="region-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity hidden" aria-hidden="true">
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                        <h3 id="region-modal-title" class="text-lg font-medium leading-6 text-gray-900 mb-4">添加区域</h3>
+                        <form id="region-form" class="space-y-4">
+                            <div>
+                                <label for="region-name" class="block text-sm font-medium text-gray-700">区域名称</label>
+                                <input type="text" id="region-name" required class="form-input">
+                            </div>
+                            <div>
+                                <label for="region-page" class="block text-sm font-medium text-gray-700">所属页面</label>
+                                <select id="region-page" required class="form-input">
+                                    <!-- 选项将通过JavaScript动态加载 -->
+                                </select>
+                            </div>
+                            <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                                <button type="submit" class="btn btn-primary">保存</button>
+                                <button type="button" class="btn" onclick="closeModal('region-modal')">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/admin.js"></script>
 </body>
-</html> 
+</html>
