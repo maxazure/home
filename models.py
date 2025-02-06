@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from datetime import datetime, timezone
 import re
 
 db = SQLAlchemy()
@@ -23,7 +24,7 @@ class User(UserMixin, db.Model):
 
     def increment_failed_attempts(self):
         self.failed_login_attempts += 1
-        self.last_failed_login = db.func.current_timestamp()
+        self.last_failed_login = datetime.now(timezone.utc)
         if self.failed_login_attempts >= 10:
             self.is_locked = True
         db.session.commit()

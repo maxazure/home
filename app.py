@@ -22,11 +22,21 @@ app.config['SECRET_KEY'] = 's2245d-secrd2234esadfa2t-keerea2y'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
 # 然后按顺序导入模型和其他模块
-from models import db, User, IPBlock, Category, Link
+from models import (
+    db, User, IPBlock, Category, Link, 
+    Page, Region  # 添加新模型
+)
 db.init_app(app)
 
 # 初始化 marshmallow
-from schemas import ma, category_schema, categories_schema, link_schema, links_schema, user_schema, users_schema
+from schemas import (
+    ma, category_schema, categories_schema, 
+    link_schema, links_schema, 
+    user_schema, users_schema,
+    page_schema, pages_schema,  # 添加新的 schema
+    region_schema, regions_schema,
+    ipblock_schema, ipblocks_schema
+)
 ma.init_app(app)
 
 # 设置登录管理器
@@ -41,6 +51,8 @@ from routes.auth_routes import auth_bp
 from routes.category_routes import category_bp
 from routes.link_routes import link_bp
 from routes.admin_routes import admin_bp
+from routes.page_routes import page_bp  # 新增页面路由
+from routes.region_routes import region_bp  # 新增区域路由
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -50,6 +62,13 @@ def load_user(user_id):
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
+
+@app.route('/<slug>')
+def page_view(slug):
+    page = Page.query.filter_by(slug=slug).first()
+    if page:
+        return app.send_static_file('index.html')
+    return app.send_static_file('404.html'), 404
 
 # 处理404错误
 @app.errorhandler(404)
@@ -61,13 +80,20 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(category_bp)
 app.register_blueprint(link_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(page_bp)  # 注册页面路由
+app.register_blueprint(region_bp)  # 注册区域路由
 
 # 修改初始化数据库命令
 @app.cli.command('init-db')
 def init_db_command():
     """Clear existing data and create new tables."""
     db.create_all()
-    print('数据库表已创建。')
+    # 创建默认首页
+    if not Page.query.filter_by(slug='home').first():
+        home_page = Page(name="Home")
+        db.session.add(home_page)
+        db.session.commit()
+    print('数据库表已创建，并添加了默认首页。')
 
 # 添加数据库迁移命令
 @app.cli.command('db-migrate')
