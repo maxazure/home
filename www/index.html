@@ -26,58 +26,86 @@
     </div>
     <script src="/js/auth.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        async function loadPageContent() {
             try {
-                const response = await fetch('/api/categories');
-                const categories = await response.json();
+                // 获取当前页面的 slug
+                const slug = window.location.pathname.substring(1) || 'home';
                 
-                const sections = {};
-                categories.forEach(category => {
-                    if (!sections[category.section_name]) {
-                        sections[category.section_name] = [];
-                    }
-                    sections[category.section_name].push(category);
-                });
+                // 先获取页面信息
+                const pageResponse = await fetch(`/api/pages`);
+                const pages = await pageResponse.json();
+                const currentPage = pages.find(p => p.slug === slug);
                 
+                if (!currentPage) {
+                    throw new Error('页面不存在');
+                }
+
+                // 获取页面的区域
                 const app = document.getElementById('app');
-                for (const [sectionName, categories] of Object.entries(sections)) {
-                    const sectionHtml = `
-                        <div class="section bg-white shadow rounded-lg overflow-hidden">
-                            <div class="px-4 py-5 sm:px-6">
-                                <h2 class="text-xl font-semibold text-gray-900">${sectionName}</h2>
-                            </div>
-                            <div class="border-t border-gray-200">
-                                <div class="px-4 py-5 sm:p-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                    ${await Promise.all(categories.map(async category => {
-                                        const linksResponse = await fetch(`/api/categories/${category.id}/links`);
-                                        const links = await linksResponse.json();
-                                        
-                                        return `
-                                            <div class="category">
-                                                <h3 class="text-lg font-medium text-gray-900 mb-4">${category.title}</h3>
-                                                <div class="grid gap-3">
-                                                    ${links.map(link => `
-                                                        <a href="${link.url}" 
-                                                           target="_blank" 
-                                                           rel="noopener noreferrer"
-                                                           class="flex items-center p-3 text-base font-medium text-gray-900 rounded-lg bg-gray-50 hover:bg-gray-100 group hover:shadow">
-                                                            <span class="flex-1 ml-3 whitespace-nowrap">${link.name}</span>
-                                                            <span class="inline-flex items-center justify-center px-2 py-0.5 ml-3 text-xs font-medium text-gray-500 bg-gray-200 rounded">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                                                </svg>
-                                                            </span>
-                                                        </a>
-                                                    `).join('')}
+                app.innerHTML = ''; // 清空现有内容
+                
+                // 遍历页面的区域
+                for (const region of currentPage.regions) {
+                    const categoriesResponse = await fetch(`/api/categories`);
+                    const allCategories = await categoriesResponse.json();
+                    const categories = allCategories.filter(c => c.region_id === region.id);
+                    
+                    const sections = {};
+                    categories.forEach(category => {
+                        if (!sections[category.section_name]) {
+                            sections[category.section_name] = [];
+                        }
+                        sections[category.section_name].push(category);
+                    });
+                    
+                    // 为每个区域创建一个容器
+                    const regionHtml = `
+                        <div class="region mb-8">
+                            <h2 class="text-2xl font-bold mb-6">${region.name}</h2>
+                            ${Object.entries(sections).map(([sectionName, sectionCategories]) => `
+                                <div class="section bg-white shadow rounded-lg overflow-hidden mb-6">
+                                    <div class="px-4 py-5 sm:px-6">
+                                        <h3 class="text-xl font-semibold text-gray-900">${sectionName}</h3>
+                                    </div>
+                                    <div class="border-t border-gray-200">
+                                        <div class="px-4 py-5 sm:p-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                            ${sectionCategories.map(category => `
+                                                <div class="category">
+                                                    <h4 class="text-lg font-medium text-gray-900 mb-4">${category.title}</h4>
+                                                    <div class="grid gap-3" id="links-${category.id}">
+                                                        <!-- 链接将通过 JavaScript 动态加载 -->
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        `;
-                                    })).then(categoriesHtml => categoriesHtml.join(''))}
+                                            `).join('')}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            `).join('')}
                         </div>
                     `;
-                    app.insertAdjacentHTML('beforeend', sectionHtml);
+                    app.insertAdjacentHTML('beforeend', regionHtml);
+                    
+                    // 加载每个分类的链接
+                    for (const category of categories) {
+                        const linksResponse = await fetch(`/api/categories/${category.id}/links`);
+                        const links = await linksResponse.json();
+                        const linksContainer = document.getElementById(`links-${category.id}`);
+                        if (linksContainer) {
+                            linksContainer.innerHTML = links.map(link => `
+                                <a href="${link.url}" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   class="flex items-center p-3 text-base font-medium text-gray-900 rounded-lg bg-gray-50 hover:bg-gray-100 group hover:shadow">
+                                    <span class="flex-1 ml-3 whitespace-nowrap">${link.name}</span>
+                                    <span class="inline-flex items-center justify-center px-2 py-0.5 ml-3 text-xs font-medium text-gray-500 bg-gray-200 rounded">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                        </svg>
+                                    </span>
+                                </a>
+                            `).join('');
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -99,7 +127,9 @@
                     </div>
                 `;
             }
-        });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadPageContent);
     </script>
 </body>
 </html> 

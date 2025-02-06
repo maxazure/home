@@ -786,49 +786,52 @@ function updateActiveMenu(section) {
 
 async function loadPages() {
     try {
-        const response = await fetch('/api/admin/pages');
+        const response = await fetch('/api/pages');
+        if (!response.ok) {
+            throw new Error('加载页面失败');
+        }
         const pages = await response.json();
         const container = document.getElementById('pages-container');
-        container.innerHTML = '';
-        pages.forEach(page => {
-            const pageCard = document.createElement('div');
-            pageCard.className = 'bg-white shadow rounded-lg overflow-hidden mb-6';
-            pageCard.innerHTML = `
-                <div class="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">${page.name}</h3>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="editPage(${page.id}, '${page.name}')" class="text-sm text-blue-600 hover:text-blue-800">编辑</button>
-                        <button onclick="deletePage(${page.id})" class="text-sm text-red-600 hover:text-red-800">删除</button>
+        container.innerHTML = pages.map(page => `
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">${page.name}</h3>
+                        <p class="mt-1 text-sm text-gray-500">访问地址: /${page.slug}</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="showAddRegionModal(${page.id})" class="btn btn-secondary">添加区域</button>
+                        <button onclick="editPage(${page.id}, '${page.name}')" class="btn btn-secondary">编辑</button>
+                        <button onclick="deletePage(${page.id})" class="btn btn-danger">删除</button>
                     </div>
                 </div>
-                <div class="px-4 py-5 sm:p-6">
-                    <div class="space-y-4" id="regions-${page.id}">
-                        ${page.regions.map(region => `
-                            <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-                                <div class="flex-1">
-                                    <h4 class="text-base font-medium text-gray-900">${region.name}</h4>
+                ${page.regions && page.regions.length > 0 ? `
+                    <div class="px-4 py-5 sm:p-6 border-t border-gray-200">
+                        <h4 class="text-base font-medium text-gray-900 mb-4">区域列表</h4>
+                        <div class="space-y-4">
+                            ${page.regions.map(region => `
+                                <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                                    <div class="flex-1">
+                                        <h5 class="text-sm font-medium text-gray-900">${region.name}</h5>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="editRegion(${region.id}, '${region.name}', ${page.id})" class="text-blue-600 hover:text-blue-800">编辑</button>
+                                        <button onclick="deleteRegion(${region.id})" class="text-red-600 hover:text-red-900">删除</button>
+                                    </div>
                                 </div>
-                                <div class="flex items-center space-x-2">
-                                    <button onclick="editRegion(${region.id}, '${region.name}', ${page.id})"
-                                            class="text-blue-600 hover:text-blue-800">编辑</button>
-                                    <button onclick="deleteRegion(${region.id})"
-                                            class="text-red-600 hover:text-red-900">删除</button>
-                                </div>
-                            </div>
-                        `).join('')}
+                            `).join('')}
+                        </div>
                     </div>
-                    <button onclick="showAddRegionModal(${page.id})" class="btn btn-primary mt-4">添加区域</button>
-                </div>
-            `;
-            container.appendChild(pageCard);
-        });
+                ` : ''}
+            </div>
+        `).join('');
     } catch (error) {
         console.error('Error loading pages:', error);
         alert('加载页面失败，请重试');
     }
 }
 
-function showAddPageModal() {
+async function showAddPageModal() {
     currentPageId = null;
     document.getElementById('page-modal-title').textContent = '添加页面';
     document.getElementById('page-name').value = '';
@@ -842,28 +845,28 @@ function editPage(id, name) {
     document.getElementById('page-modal').classList.remove('hidden');
 }
 
-document.getElementById('page-form').addEventListener('submit', async (e) => {
+document.getElementById('page-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('page-name').value;
+    
     try {
-        const url = currentPageId 
-            ? `/api/admin/pages/${currentPageId}`
-            : '/api/admin/pages';
+        const url = currentPageId ? `/api/pages/${currentPageId}` : '/api/pages/';
         const method = currentPageId ? 'PUT' : 'POST';
+        
         const response = await fetch(url, {
-            method,
+            method: method,
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name }),
+            body: JSON.stringify({ name })
         });
-        if (response.ok) {
-            closeModal('page-modal');
-            await loadPages();
-        } else {
-            const error = await response.json();
-            alert(error.message || '操作失败');
+        
+        if (!response.ok) {
+            throw new Error('操作失败');
         }
+        
+        closeModal('page-modal');
+        await loadPages();
     } catch (error) {
         console.error('Error saving page:', error);
         alert('保存失败，请重试');
@@ -890,18 +893,39 @@ async function deletePage(id) {
     }
 }
 
-function showAddRegionModal(pageId) {
+async function loadPagesForSelect() {
+    try {
+        const response = await fetch('/api/pages');
+        if (!response.ok) {
+            throw new Error('加载页面失败');
+        }
+        const pages = await response.json();
+        const select = document.getElementById('region-page');
+        select.innerHTML = pages.map(page =>
+            `<option value="${page.id}">${page.name}</option>`
+        ).join('');
+    } catch (error) {
+        console.error('Error loading pages for select:', error);
+        alert('加载页面列表失败，请重试');
+    }
+}
+
+async function showAddRegionModal(pageId) {
     currentRegionId = null;
     document.getElementById('region-modal-title').textContent = '添加区域';
     document.getElementById('region-name').value = '';
-    document.getElementById('region-page').value = pageId;
+    await loadPagesForSelect();
+    if (pageId) {
+        document.getElementById('region-page').value = pageId;
+    }
     document.getElementById('region-modal').classList.remove('hidden');
 }
 
-function editRegion(id, name, pageId) {
+async function editRegion(id, name, pageId) {
     currentRegionId = id;
     document.getElementById('region-modal-title').textContent = '编辑区域';
     document.getElementById('region-name').value = name;
+    await loadPagesForSelect();
     document.getElementById('region-page').value = pageId;
     document.getElementById('region-modal').classList.remove('hidden');
 }
@@ -912,8 +936,8 @@ document.getElementById('region-form').addEventListener('submit', async (e) => {
     const page_id = document.getElementById('region-page').value;
     try {
         const url = currentRegionId 
-            ? `/api/admin/regions/${currentRegionId}`
-            : '/api/admin/regions';
+            ? `/api/regions/${currentRegionId}`
+            : '/api/regions';
         const method = currentRegionId ? 'PUT' : 'POST';
         const response = await fetch(url, {
             method,
@@ -940,7 +964,7 @@ async function deleteRegion(id) {
         return;
     }
     try {
-        const response = await fetch(`/api/admin/regions/${id}`, {
+        const response = await fetch(`/api/regions/${id}`, {
             method: 'DELETE',
         });
         if (response.ok) {
