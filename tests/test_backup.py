@@ -1,7 +1,8 @@
 import unittest
 import json
 import os
-from app import app, db, Category, Link, User
+from app import app, db
+from models import Category, Link, User, Page, Region
 from io import BytesIO
 
 class TestBackupFeatures(unittest.TestCase):
@@ -38,29 +39,51 @@ class TestBackupFeatures(unittest.TestCase):
     
     def test_export_empty_data(self):
         """测试导出空数据"""
-        response = self.client.get('/api/admin/export')
-        self.assertEqual(response.status_code, 200)
-        
-        # 验证导出的JSON格式
-        data = response.json
-        self.assertIn('categories', data)
-        self.assertIn('links', data)
-        self.assertEqual(len(data['categories']), 0)
-        self.assertEqual(len(data['links']), 0)
+        with self.client as client:
+            response = client.get('/api/admin/export')
+            self.assertEqual(response.status_code, 200)
+            
+            # 验证响应类型和内容
+            self.assertTrue(response.content_type.startswith('application/json'))
+            # 获取响应内容并解析
+            content = response.get_data(as_text=True)
+            data = json.loads(content)
+            
+            self.assertIn('pages', data)
+            self.assertIn('regions', data)
+            self.assertIn('categories', data)
+            self.assertIn('links', data)
+            self.assertEqual(len(data['pages']), 0)
+            self.assertEqual(len(data['regions']), 0)
+            self.assertEqual(len(data['categories']), 0)
+            self.assertEqual(len(data['links']), 0)
     
     def test_export_with_data(self):
         """测试导出包含数据的情况"""
         # 创建测试数据
         with app.app_context():
+            # 创建页面
+            page = Page(name='测试页面')
+            db.session.add(page)
+            db.session.flush()
+            
+            # 创建区域
+            region = Region(name='测试区域', page_id=page.id)
+            db.session.add(region)
+            db.session.flush()
+            
+            # 创建分类
             category = Category(
                 title='测试分类',
                 section_name='测试区域',
                 section_order=1,
-                category_order=1
+                category_order=1,
+                region_id=region.id
             )
             db.session.add(category)
             db.session.flush()
             
+            # 创建链接
             link = Link(
                 name='测试链接',
                 url='http://test.com',
@@ -70,31 +93,48 @@ class TestBackupFeatures(unittest.TestCase):
             db.session.commit()
         
         # 测试导出
-        response = self.client.get('/api/admin/export')
-        self.assertEqual(response.status_code, 200)
-        
-        # 验证导出的数据
-        data = response.json
-        self.assertEqual(len(data['categories']), 1)
-        self.assertEqual(len(data['links']), 1)
-        self.assertEqual(data['categories'][0]['title'], '测试分类')
-        self.assertEqual(data['links'][0]['name'], '测试链接')
+        with self.client as client:
+            response = client.get('/api/admin/export')
+            self.assertEqual(response.status_code, 200)
+            
+            # 验证响应类型和内容
+            self.assertTrue(response.content_type.startswith('application/json'))
+            # 获取响应内容并解析
+            content = response.get_data(as_text=True)
+            data = json.loads(content)
+            
+            self.assertEqual(len(data['pages']), 1)
+            self.assertEqual(len(data['regions']), 1)
+            self.assertEqual(len(data['categories']), 1)
+            self.assertEqual(len(data['links']), 1)
+            self.assertEqual(data['pages'][0]['name'], '测试页面')
+            self.assertEqual(data['regions'][0]['name'], '测试区域')
+            self.assertEqual(data['categories'][0]['title'], '测试分类')
+            self.assertEqual(data['links'][0]['name'], '测试链接')
     
     def test_import_valid_data(self):
         """测试导入有效数据"""
         # 准备测试数据
         test_data = {
+            'pages': [{
+                'name': '导入测试页面',
+                'slug': 'import-test-page'
+            }],
+            'regions': [{
+                'name': '导入测试区域',
+                'page_slug': 'import-test-page'
+            }],
             'categories': [{
                 'title': '导入测试分类',
                 'section_name': '导入测试区域',
                 'section_order': 1,
-                'category_order': 1
+                'category_order': 1,
+                'region_name': '导入测试区域'
             }],
             'links': [{
                 'name': '导入测试链接',
                 'url': 'http://import-test.com',
-                'category_title': '导入测试分类',
-                'section_name': '导入测试区域'
+                'category_title': '导入测试分类'
             }]
         }
         
@@ -113,11 +153,17 @@ class TestBackupFeatures(unittest.TestCase):
         
         # 验证导入的数据
         with app.app_context():
+            pages = Page.query.all()
+            regions = Region.query.all()
             categories = Category.query.all()
             links = Link.query.all()
             
+            self.assertEqual(len(pages), 1)
+            self.assertEqual(len(regions), 1)
             self.assertEqual(len(categories), 1)
             self.assertEqual(len(links), 1)
+            self.assertEqual(pages[0].name, '导入测试页面')
+            self.assertEqual(regions[0].name, '导入测试区域')
             self.assertEqual(categories[0].title, '导入测试分类')
             self.assertEqual(links[0].name, '导入测试链接')
     
@@ -160,11 +206,20 @@ class TestBackupFeatures(unittest.TestCase):
         """测试导入不同编码的文件"""
         # 准备测试数据
         test_data = {
+            'pages': [{
+                'name': '测试页面',
+                'slug': 'test-page'
+            }],
+            'regions': [{
+                'name': '测试区域',
+                'page_slug': 'test-page'
+            }],
             'categories': [{
                 'title': '中文测试分类',
                 'section_name': '中文测试区域',
                 'section_order': 1,
-                'category_order': 1
+                'category_order': 1,
+                'region_name': '测试区域'
             }],
             'links': []
         }
@@ -190,4 +245,4 @@ class TestBackupFeatures(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()
