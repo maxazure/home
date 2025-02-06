@@ -148,6 +148,7 @@ class TestBackupFeatures(unittest.TestCase):
             data={'file': file},
             content_type='multipart/form-data'
         )
+        file[0].close()  # 关闭文件以避免 ResourceWarning
         
         self.assertEqual(response.status_code, 200)
         
@@ -179,6 +180,7 @@ class TestBackupFeatures(unittest.TestCase):
             data={'file': file},
             content_type='multipart/form-data'
         )
+        file[0].close()  # 关闭文件以避免 ResourceWarning
         
         self.assertEqual(response.status_code, 400)
     
@@ -199,6 +201,7 @@ class TestBackupFeatures(unittest.TestCase):
             data={'file': file},
             content_type='multipart/form-data'
         )
+        file[0].close()  # 关闭文件以避免 ResourceWarning
         
         self.assertEqual(response.status_code, 400)
     
@@ -233,6 +236,7 @@ class TestBackupFeatures(unittest.TestCase):
             content_type='multipart/form-data'
         )
         self.assertEqual(response.status_code, 200)
+        utf8_file[0].close()  # 关闭文件以避免 ResourceWarning
         
         # 测试 GBK 编码
         gbk_data = json.dumps(test_data, ensure_ascii=False).encode('gbk')
@@ -243,6 +247,7 @@ class TestBackupFeatures(unittest.TestCase):
             content_type='multipart/form-data'
         )
         self.assertEqual(response.status_code, 200)
+        gbk_file[0].close()  # 关闭文件以避免 ResourceWarning
 
 if __name__ == '__main__':
     unittest.main()

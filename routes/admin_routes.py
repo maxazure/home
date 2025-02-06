@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, redirect, current_app, send_file
 import json
+import os
 import tempfile
-import os  # 添加缺少的导入
+import io
 from flask_login import login_required, current_user
 from models import Category, Link, User, IPBlock, Page, Region, db
 from schemas import (
@@ -436,18 +437,17 @@ def export_data():
             'links': links_schema.dump(Link.query.all())
         }
         
-        # 使用上下文管理器创建临时文件
-        with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.json') as temp:
-            json.dump(export_data_dict, temp, ensure_ascii=False, indent=2)
-            temp_name = temp.name
-        
+        # 使用 in-memory BytesIO 创建 JSON 数据
+        json_data = json.dumps(export_data_dict, ensure_ascii=False, indent=2)
+        buffer = io.BytesIO(json_data.encode('utf-8'))
+        buffer.seek(0)
         response = send_file(
-            temp_name,
+            buffer,
             mimetype='application/json',
             as_attachment=True,
             download_name='backup.json'
         )
-        response.call_on_close(lambda: os.remove(temp_name))
+        response.call_on_close(buffer.close)
         return response
     except Exception as e:
         return jsonify({'message': f'导出失败: {str(e)}'}), 500
